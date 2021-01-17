@@ -817,7 +817,7 @@ string cprint_waitingforplayers;
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version beta 1.0 14/jan/2021"
+#define MCPVERSION				"version \sbeta 1.01\s (18/jan/2021)"
 
 #define FLAG_RESET				60
 #define FLAG_TOSSSPEED				600

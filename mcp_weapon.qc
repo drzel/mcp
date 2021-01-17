@@ -766,6 +766,7 @@ void() W_ZutAttack =
 		if (trace_ent.takedamage)
 		{
 			local float maxdamage = 75;
+			local float mindamage = 15;
 			local float mindistance = 300;
 			local float maxdistance = 1200;
 			local float dmg;
@@ -779,8 +780,8 @@ void() W_ZutAttack =
 			local float dmgrange = maxdistance-mindistance;
 			dmg = maxdamage * (1-(distance/dmgrange));
 			dmg = rint(dmg);
-			if(dmg < 10)
-				dmg = 10;
+			if(dmg < mindamage)
+				dmg = mindamage;
 				
 			//sprint(self, PRINT_HIGH, strcat("distance:",ftos(distance), " dmgrange:", ftos(dmgrange), " damage:", ftos(dmg), ".\n"));
 			if(trace_ent.classname == "player" && trace_ent.team_no != self.team_no)

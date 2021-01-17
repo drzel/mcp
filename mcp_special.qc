@@ -172,7 +172,8 @@ void SpawnTeleBall() =
 	if(self.team_no == TEAM_RED)
 		newmis.skin = 2;
 	setsize(newmis, self.mins, self.maxs);             
-	setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
+	//setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
+	setorigin (newmis, self.origin + '0 0 16');
 	FO_Sound(newmis, CHAN_ITEM, "beta1/teleball_start.wav", 1, ATTN_NORM);
 };
 
