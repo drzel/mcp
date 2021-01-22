@@ -70,7 +70,8 @@ void() PlayerDeathThink =
 	self.button0 = 0;
 	self.button1 = 0;
 	self.button2 = 0;
-	respawn();
+	if(time > self.nextrespawn)
+		respawn();
 };
 
 

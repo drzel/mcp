@@ -469,3 +469,102 @@ void ChangeRole(float r) =
 		return;
 	}
 };
+
+void CreateAlias(entity e, string s, float imp) =
+{
+    local string aliasstring = strcat("alias ",s," impulse ",ftos(imp),"\n");
+    stuffcmd(e, aliasstring);
+};
+
+void SetAliases3(entity e) = 
+{
+	if(e.team_no == TEAM_NONE && e.role == ROLE_NONE)
+	{
+		sprint(e, PRINT_HIGH, "\n\ntype \smcp-help\s in console for mod help topics.\n\n");
+		stuffcmd(e, "play beta1/notice.wav\n");
+	}
+	
+	CreateAlias(e,"getmissing", IMP_GETMISSING);
+	CreateAlias(e,"mcp-help", IMP_MCPHELP);
+	CreateAlias(e,"mcp-binds", IMP_BINDS);
+	CreateAlias(e,"mcp-setinfos", IMP_SETINFOS);
+	CreateAlias(e,"mcp-commands", IMP_COMMANDS);
+	//CreateAlias(e,"mcp-classes", IMP_CLASSES);
+	CreateAlias(e,"mcp-goal", IMP_GOAL);
+	
+	CreateAlias(e,"mcp-version", IMP_VERSION);
+	
+		
+};
+
+void SetAliases2(entity e) =
+{
+
+	CreateAlias(e,"get1", IMP_GB1);
+	CreateAlias(e,"get2", IMP_GB2);
+	CreateAlias(e,"get3", IMP_GB3);
+	CreateAlias(e,"get4", IMP_GB4);
+	CreateAlias(e,"get5", IMP_GB5);
+	CreateAlias(e,"get6", IMP_GR1);
+	CreateAlias(e,"get7", IMP_GR2);
+	CreateAlias(e,"get8", IMP_GR3);
+	CreateAlias(e,"get9", IMP_GR4);
+	CreateAlias(e,"get10", IMP_GR5);
+	CreateAlias(e,"get11", IMP_GM1);
+	CreateAlias(e,"get12", IMP_GM2);
+	CreateAlias(e,"get13", IMP_GM3);
+	
+	CreateAlias(e,"weapnext", IMP_NEXTWEAPON);
+	CreateAlias(e,"weapprev", IMP_PREVWEAPON);
+	CreateAlias(e,"weaplast", IMP_LASTWEAPON);
+	
+	CreateAlias(e,"+gren1", IMP_PRIMEGREN);
+	CreateAlias(e,"-gren1", IMP_THROWGREN);
+	CreateAlias(e,"+gren", IMP_PRIMEGREN);
+	CreateAlias(e,"-gren", IMP_THROWGREN);
+	CreateAlias(e,"+gren2", IMP_PRIMEGREN);
+	CreateAlias(e,"-gren2", IMP_THROWGREN);
+};
+
+void SetAliases1(entity e) =
+{
+	CreateAlias(e,"reload", IMP_RELOAD);
+	CreateAlias(e,"swapteam", IMP_SWAPTEAM);
+	CreateAlias(e,"changeteam", IMP_CHANGETEAM);
+	CreateAlias(e,"changeclass", IMP_CHANGEROLE);
+	CreateAlias(e,"special", IMP_SPECIAL);
+	
+	CreateAlias(e,"dropflag", IMP_THROWMCPFLAG);
+	CreateAlias(e,"dropitems", IMP_THROWMCPFLAG);
+	CreateAlias(e,"throwflag", IMP_THROWMCPFLAG);
+	
+	CreateAlias(e,"discard", IMP_NULL);
+	CreateAlias(e,"joinred", IMP_JOINRED);
+	CreateAlias(e,"joinblue", IMP_JOINBLUE);
+	CreateAlias(e,"gored", IMP_JOINRED);
+	CreateAlias(e,"goblue", IMP_JOINBLUE);
+	CreateAlias(e,"recon", IMP_GORECON);
+	CreateAlias(e,"assassin", IMP_GOASSASSIN);
+	CreateAlias(e,"fighter", IMP_GOFIGHTER);
+	CreateAlias(e,"bomber", IMP_GOBOMBER);
+	CreateAlias(e,"support", IMP_GOSUPPORT);
+	CreateAlias(e,"scout", IMP_GORECON);
+	CreateAlias(e,"sniper", IMP_GOASSASSIN);
+	CreateAlias(e,"soldier", IMP_GOFIGHTER);
+	CreateAlias(e,"demoman", IMP_GOBOMBER);
+	CreateAlias(e,"medic", IMP_GOSUPPORT);
+	
+	CreateAlias(e,"ready", IMP_PLAYER_READY);
+	CreateAlias(e,"forcestart", IMP_PLAYER_FORCESTART);
+
+	CreateAlias(e,"primeone", IMP_PRIMEGREN);
+	CreateAlias(e,"primetwo", IMP_PRIMEGREN);
+	CreateAlias(e,"primegren", IMP_PRIMEGREN);
+	CreateAlias(e,"throwgren", IMP_THROWGREN);
+	CreateAlias(e,"gren1", IMP_2TAPGREN);
+	CreateAlias(e,"gren2", IMP_2TAPGREN);
+	
+	CreateAlias(e,"inv", IMP_INV);
+	CreateAlias(e,"flaginfo", IMP_FLAGINFO);
+
+};

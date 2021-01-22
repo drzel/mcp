@@ -105,3 +105,4 @@ float AutoPickTeam();
 void NextWeapon();
 void PrevWeapon();
 void LastWeapon();
+void SetNextRespawn(entity ent, float sui);

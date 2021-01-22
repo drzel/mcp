@@ -777,16 +777,19 @@ entity lastspawn_red;
 entity gm;
 entity mcpflag;
 entity mcpflagspawn;
+
 .float playerstate;
 .float isconnected;
 .float ismoving;
+.float nextrespawn;
+
+.float heat;
 
 .float team_no;
 .float role;
 .float nextrole;
 .float menu;
 .float lastweapon;
-
 
 .float clip_curr_tertiary;
 .float clip_curr_secondary;
@@ -817,10 +820,14 @@ string cprint_waitingforplayers;
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.01\s (18/jan/2021)"
+#define MCPVERSION				"version \sbeta 1.03\s (22/jan/2021)"
 
 #define FLAG_RESET				60
 #define FLAG_TOSSSPEED				600
+
+#define RESPAWNPENALTY_SUICIDE			5
+#define RESPAWNPENALTY_INCONTROL		5
+#define RESPAWNPENALTY_OUTOFCONTROL		0	
 
 #define WPN_NONE				0
 #define WPN_AXE					1
@@ -871,10 +878,10 @@ string cprint_waitingforplayers;
 #define SPECIAL_DURATION_ASSASSIN		6
 #define TELEBALL_DURATION			6
 #define TELEBALL_SPEED				500
-#define HARPOON_SPEED				1500
+#define HARPOON_SPEED				1750
 #define HARPOON_MAXKNOCKBACK			250
-#define HARPOON_DAMAGE				20
-#define SHAFT_HEAL				3
+#define HARPOON_DAMAGE				25
+#define SHAFT_HEAL				5
 #define CLIMBINGNAIL_DURATION			2
 #define CLIMBINGNAIL_BOOST			300
 
@@ -1004,7 +1011,6 @@ string cprint_waitingforplayers;
 #define IMP_COMMANDS			167
 #define IMP_CLASSES			168
 #define IMP_GOAL			169
-
 
 
 #define IMP_HELP_RECON			171

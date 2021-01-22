@@ -34,10 +34,34 @@ float(entity targ, entity inflictor) CanDamage =
 };
 
 // Killed
+void SetNextRespawn (entity ent, float sui) =
+{
+	if(matchstate == MATCHSTATE_LIVE)
+	{
+		if(sui == 1)
+		{
+			ent.nextrespawn = time + RESPAWNPENALTY_SUICIDE;
+			sprint(ent, PRINT_HIGH, strcat("you can respawn in ", ftos(RESPAWNPENALTY_SUICIDE), " seconds.\n"));
+			return;
+		}
+		if(mcpflag.playerstate == MCPFLAGSTATE_CAPPED && mcpflag.team_no == ent.team_no)
+		{
+			ent.nextrespawn = time + RESPAWNPENALTY_INCONTROL;
+			sprint(ent, PRINT_HIGH, strcat("you can respawn in ", ftos(RESPAWNPENALTY_INCONTROL), " seconds.\n"));
+			return;
+		}
+	}
+		
+	ent.nextrespawn = time + RESPAWNPENALTY_OUTOFCONTROL;
+};
 
 void(entity targ, entity attacker) Killed =
 {
 	KillSound(targ, attacker);
+	SetNextRespawn(targ, 0);
+
+	
+	
 	local entity oself;
 	
 	oself = self;
@@ -345,8 +369,8 @@ void (entity targ, entity inflictor, entity attacker, float damage) HitSound =
 		return;
             
 
-                local float crit;
-                if(targ.armorvalue <= 0)
+		local float crit;
+		if(targ.armorvalue <= 0)
 			crit = 1;
 /*
 		
@@ -366,10 +390,20 @@ void (entity targ, entity inflictor, entity attacker, float damage) HitSound =
 		//sprint(self, PRINT_HIGH, strcat(inflictor.classname, " infcn ", attacker.classname, " attrcn\n"));
                 
                 if (targ.team_no != attacker.team_no) {
-                    if (crit == 1){
+			if(attacker.weapon == WPN_RAILGUN)
+			{
+				if(attacker.heat == 1)
+					stuffcmd(attacker, "play beta1/hitsound_rail1.wav\n");
+				if(attacker.heat == 2)
+					stuffcmd(attacker, "play beta1/hitsound_rail2.wav\n");
+				if(attacker.heat == 3)
+					stuffcmd(attacker, "play beta1/hitsound_rail3.wav\n");
+				return;
+			}
+			if (crit == 1){
                         stuffcmd(attacker, "play beta1/hitsound_crit.wav\n");		
-                    }
-                    else { 
+			}
+			else { 
                         stuffcmd(attacker, "play beta1/hitsound.wav\n");		
                     }
                 }

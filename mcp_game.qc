@@ -49,7 +49,7 @@ void sprite_touch() =
 		else if(self.team_no == ROLE_ASSASSIN)
 		{
 			l1 = "\n\s[\sassassin\s]\s\n";
-			l2 = "\sweapon :\s (railgun) - the closer you are the more damage you do\n";
+			l2 = "\sweapon :\s (railgun) - being closer does more damage, consecutive hits multiplies damage (3x max)\n";
 			l3 = "\sgrenade:\s (flash) - temporarily blind targets, duration is longer closer to blast\n";
 			l4 = "\sspecial:\s (cloak) - go invisible for a few seconds, cant shoot whilst invisible\n";
 			l5 = "\spassive:\s (melee) - significant boost to axe damage\n";
@@ -68,7 +68,7 @@ void sprite_touch() =
 			l2 = "\sweapon :\s (stickylauncher) - explode on contact with enemy or detonated when 'special' is pressed\n";
 			l3 = "\sgrenade:\s (beartrap) - does significant damage to enemies who step on it, can be shot and destroyed\n";
 			l4 = "\sspecial:\s (detonate) - explodes any stickys you have\n";
-			l5 = "\spassive:\s (health armour regen) -  slowly regens health when standing still\n";
+			l5 = "\spassive:\s (health and armour regen) -  slowly regens health and armour\n";
 				
 		}
 		else if(self.team_no == ROLE_SUPPORT)
@@ -77,7 +77,7 @@ void sprite_touch() =
 			l2 = "\sweapon :\s (shaft) - lightning gun, can heal teammates\n";
 			l3 = "\sgrenade:\s (leech) - portion of damage dealt to enemy heals owner\n";
 			l4 = "\sspecial:\s (teleball) - press once to launch a teleball, again to teleport to the teleballs location\n";
-			l5 = "\spassive:\s (overheal) -  leech grenade can overheal user to 150 health\n";
+			l5 = "\spassive:\s (overheal) -  leech grenade can overheal user to 150 health (decays over time)\n";
 		}
 		else
 		{

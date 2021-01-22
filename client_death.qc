@@ -17,7 +17,8 @@ void() ClientKill =
 
 	if(self.deadflag)
 		return;
-
+	SetNextRespawn(self, 1);
+	
 	if(matchstate == MATCHSTATE_LIVE)
 	{
 		bprint (PRINT_MEDIUM, self.netname);

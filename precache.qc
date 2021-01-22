@@ -397,6 +397,11 @@ void zPreCache() =
 	precache_sound("beta1/hitsound_team.wav");
 	precache_sound("beta1/healsound.wav");
 	
+	precache_sound("beta1/hitsound_rail0.wav");
+	precache_sound("beta1/hitsound_rail1.wav");
+	precache_sound("beta1/hitsound_rail2.wav");
+	precache_sound("beta1/hitsound_rail3.wav");
+	
 	precache_sound("beta1/cloak.wav");
 	precache_sound("beta1/uncloak.wav");
 	precache_sound("beta1/grenade_flash.wav");

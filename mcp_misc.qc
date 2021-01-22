@@ -122,6 +122,7 @@ void RefreshObjectiveString() =
 	
 	if(matchstate == MATCHSTATE_LIVE)
 	{
+	
 		if (mcpflag.playerstate == MCPFLAGSTATE_NONE)
 		{
 			line1 = "the flag has not spawned yet!\n";
@@ -169,6 +170,12 @@ void RefreshObjectiveString() =
 				line1 ="enemy controls the flag!\n";
 				line2 = "attack enemy base!\n";
 			}
+		}
+		
+		if(self.FlashTime > 0)
+		{
+			line1 = "\n";
+			line2 = "\n";
 		}
 	}
 	

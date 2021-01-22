@@ -32,10 +32,6 @@ void() W_WeaponFrame =
 	if (self.isreloading == 1)
 		return;
 
-		
-
-
-
 	if (time < self.attack_finished)
 	{
 		return;

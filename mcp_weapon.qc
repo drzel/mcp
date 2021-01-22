@@ -93,164 +93,6 @@ float Weap2Imp(float wpn) =
 		return 4;
 };
 
-/*float Imp2Weap(float imp) =
-{
-	if(self.role == ROLE_RECON)
-	{
-		if(imp == 1)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_NAILGUN;
-			else
-				return WPN_AXE;
-		}
-		if(imp == 2)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SUPERSHOTGUN;
-			else
-				return WPN_SHOTGUN;
-		}	
-		if(imp == 3)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHOTGUN;
-			else
-				return WPN_SUPERSHOTGUN;
-		}
-		if(imp == 4)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_AXE;
-			else
-				return WPN_NAILGUN;
-		}			
-	}
-	if(self.role == ROLE_ASSASSIN)
-	{
-		if(imp == 1)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_RAILGUN;
-			else
-				return WPN_AXE;
-		}
-		if(imp == 2)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SUPERSHOTGUN;
-			else
-				return WPN_SHOTGUN;
-		}	
-		if(imp == 3)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHOTGUN;
-			else
-				return WPN_SUPERSHOTGUN;
-		}
-		if(imp == 4)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_AXE;
-			else
-				return WPN_RAILGUN;
-		}			
-	}
-	if(self.role == ROLE_FIGHTER)
-	{
-		if(imp == 1)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_ROCKETLAUNCHER;
-			else
-				return WPN_AXE;
-		}
-		if(imp == 2)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SUPERSHOTGUN;
-			else
-				return WPN_SHOTGUN;
-		}	
-		if(imp == 3)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHOTGUN;
-			else
-				return WPN_SUPERSHOTGUN;
-		}
-		if(imp == 4)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_AXE;
-			else
-				return WPN_ROCKETLAUNCHER;
-		}			
-	}
-	if(self.role == ROLE_BOMBER)
-	{
-		if(imp == 1)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_PIPELAUNCHER;
-			else
-				return WPN_AXE;
-		}
-		if(imp == 2)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SUPERSHOTGUN;
-			else
-				return WPN_SHOTGUN;
-		}	
-		if(imp == 3)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHOTGUN;
-			else
-				return WPN_SUPERSHOTGUN;
-		}
-		if(imp == 4)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_AXE;
-			else
-				return WPN_PIPELAUNCHER;
-		}			
-	}
-	if(self.role == ROLE_SUPPORT)
-	{
-		if(imp == 1)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHAFT;
-			else
-				return WPN_AXE;
-		}
-		if(imp == 2)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SUPERSHOTGUN;
-			else
-				return WPN_SHOTGUN;
-		}	
-		if(imp == 3)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_SHOTGUN;
-			else
-				return WPN_SUPERSHOTGUN;
-		}
-		if(imp == 4)
-		{
-			if(infokey(self, "tf2slots") == "1")
-				return WPN_AXE;
-			else
-				return WPN_SHAFT;
-		}			
-	}
-};*/
 
 void StickyTouch() = 
 {
@@ -765,8 +607,8 @@ void() W_ZutAttack =
 		ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
 		if (trace_ent.takedamage)
 		{
-			local float maxdamage = 75;
-			local float mindamage = 15;
+			local float maxdamage = 50;
+			local float mindamage = 10;
 			local float mindistance = 300;
 			local float maxdistance = 1200;
 			local float dmg;
@@ -786,7 +628,29 @@ void() W_ZutAttack =
 			//sprint(self, PRINT_HIGH, strcat("distance:",ftos(distance), " dmgrange:", ftos(dmgrange), " damage:", ftos(dmg), ".\n"));
 			if(trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
 			{
-				sprint(self, PRINT_HIGH, strcat("you rail ",trace_ent.netname, " for ", ftos(dmg), " damage.\n"));
+				self.heat = self.heat + 1;
+				if(self.heat > 3)
+					self.heat = 3;
+				dmg = dmg * self.heat;
+				local string multiplier = "";
+				if(self.heat == 1)
+					multiplier = " damage.\n";
+				if(self.heat == 2)
+					multiplier = " damage (doubled).\n";
+				if(self.heat == 3)
+					multiplier = " damage (tripled).\n";
+				
+				sprint(self, PRINT_HIGH, strcat("you rail ",trace_ent.netname, " for ", ftos(dmg), multiplier));
+				
+			}
+			else
+			{	
+				if(self.heat > 0)
+				{	
+					self.heat = 0;
+					stuffcmd(self, "play beta1/hitsound_rail0.wav\n");
+					sprint(self, PRINT_HIGH, strcat("consecutive hit multiplier lost.\n"));
+				}
 			}
 			trace_ent.axhitme = 1;
 			SpawnBlood (org, 20);
@@ -803,6 +667,12 @@ void() W_ZutAttack =
 			WriteCoord (MSG_MULTICAST, org_y);
 			WriteCoord (MSG_MULTICAST, org_z);
 			multicast (org, MULTICAST_PVS);
+			if(self.heat > 0)
+			{	
+				self.heat = 0;
+				stuffcmd(self, "play beta1/hitsound_rail0.wav\n");
+				sprint(self, PRINT_HIGH, strcat("consecutive hit multiplier lost.\n"));
+			}
 		}
 
 		org = self.origin + '0 0 16';
@@ -834,8 +704,6 @@ void() W_ZutAttack =
 		WriteCoord (MSG_MULTICAST, trace_endpos_z);
 		multicast (org, MULTICAST_PHS);
 		}
-
-
 	}
 		
 };

@@ -469,7 +469,6 @@ void () muzzleflash = {
 void() PlayerDead =
 {
 	self.nextthink = -1;
-// allow respawn after a certain time
 	self.deadflag = DEAD_DEAD;
 };
 

@@ -19,10 +19,6 @@ void DetStickys()=
 	{
 		if (te2.owner == self && te2 != world) 
 		{
-//			if(te2 == world)
-//			{
-//				return;
-//			}
 			te2.think = StickyTrapExplode;
 			te2.nextthink = time;
 			playsound = 1;
@@ -48,7 +44,6 @@ void Cloak_Think()=
 	if(self.bubble_count >= SPECIAL_DURATION_ASSASSIN)
 	{
 		self.owner.cloak_complete = 1;
-		//self.owner.playerstate = self.owner.playerstate - (self.owner.playerstate & PLAYERSTATE_CLOAKED);
 		FO_SetModel(self.owner, "progs/player.mdl");
 		setsize (self.owner, VEC_HULL_MIN, VEC_HULL_MAX);
 		FO_Sound(self.owner, CHAN_ITEM, "beta1/uncloak.wav", 1, ATTN_NORM);
@@ -549,7 +544,7 @@ void ThrowHarpoon() =
 		if(self.team_no == TEAM_RED)
 			newmis.skin = 2;
 		setsize (newmis, '0 0 0', '0 0 0');             
-		setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
+		setorigin (newmis, self.origin + '0 0 16');
 		//setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
 		
 		local float links = 5;
@@ -610,12 +605,10 @@ void RegenHealthArmour() =
 {
 	if (time <= self.next_healtharmourregen)
 		return;
-		
-
 	
 	self.next_healtharmourregen = time + 1;
 	
-	if(self.health > 100)
+	if(self.health > 100)			//health rot for support overheal
 	{
 		self.health = self.health - 1;
 	}
@@ -631,25 +624,32 @@ void RegenHealthArmour() =
 	{	
 		if(infokey(self, "regensound") != "0")
 			stuffcmd(self, "play beta1/regenhealth.wav\n");
-		if(self.health == 99)
-			self.health = self.health + 1;
-		else
-			self.health = self.health + 2;
+		
+		self.health = self.health + 2;
+		if(self.health > 100)
+			self.health = 100;
 			
 	}
-	if(self.role == ROLE_BOMBER && self.ismoving == 0)
+	if(self.role == ROLE_BOMBER)
 	{
+		if(self.armorvalue  < ARMOUR_MAX_BOMBER || self.health < 100)
+		{
+			if(infokey(self, "regensound") != "0")
+				stuffcmd(self, "play beta1/regenhealtharmour.wav\n");
+		}
 		if(self.health < 100)
 		{
-			self.health = self.health + 1;
+			self.health = self.health + 2;
+			
+			if(self.health > 100)
+				self.health = 100;
 		}
 		if(self.armorvalue < ARMOUR_MAX_BOMBER)
 		{
-			self.armorvalue  = self.armorvalue + 1;
+			self.armorvalue = self.armorvalue + 2;
+			if(self.armorvalue > ARMOUR_MAX_BOMBER)
+				self.armorvalue = ARMOUR_MAX_BOMBER;
 		}
-		if(self.armorvalue  < ARMOUR_MAX_BOMBER || self.health < 100)
-			if(infokey(self, "regensound") != "0")
-				stuffcmd(self, "play beta1/regenhealtharmour.wav\n");
 	}
 };
 
@@ -693,7 +693,7 @@ void RegenCells() =
 			stuffcmd(self, "play beta1/specialready_support.wav\n");
 		}
 	}
-		if(self.role == ROLE_FIGHTER)
+	if(self.role == ROLE_FIGHTER)
 	{
 		self.next_cellregen = time + 1;
 		self.ammo_cells = self.ammo_cells + 5;
