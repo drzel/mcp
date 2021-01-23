@@ -334,7 +334,7 @@ void zPreCache() =
 	precache_sound("beta1/voice_fight.wav");
 	precache_sound("beta1/voice_blueleads.wav");
 	precache_sound("beta1/voice_redleads.wav");
-	precache_sound("beta1/voice_holyshit.wav");
+
 	precache_sound("beta1/voice_enemyhasflag.wav");
 	precache_sound("beta1/voice_teamhasflag.wav");
 	precache_sound("beta1/voice_youhaveflag.wav");
@@ -343,6 +343,16 @@ void zPreCache() =
 	precache_sound("beta1/voice_yousuck.wav");
 	precache_sound("beta1/voice_bluescores.wav");
 	precache_sound("beta1/voice_redscores.wav");
+	
+	precache_sound("beta1/voice_killingspree.wav");
+	precache_sound("beta1/voice_dominating.wav");
+	precache_sound("beta1/voice_megakill.wav");
+	precache_sound("beta1/voice_unstoppable.wav");
+	precache_sound("beta1/voice_ultrakill.wav");
+	precache_sound("beta1/voice_monsterkill.wav");
+	precache_sound("beta1/voice_godlike.wav");
+	precache_sound("beta1/voice_holyshit.wav");
+	
 	
 	precache_sound("beta1/humiliation.wav");
 	

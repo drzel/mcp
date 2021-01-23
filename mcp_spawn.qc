@@ -16,6 +16,7 @@ void ClearPlayerState() =
 	self.iscloaked = 0;
 	self.gren = world;
 	self.heat = 0;
+	self.killstreakcount = 0;
 };
 
 void SetTeamFragsColourName() =

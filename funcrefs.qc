@@ -106,3 +106,4 @@ void NextWeapon();
 void PrevWeapon();
 void LastWeapon();
 void SetNextRespawn(entity ent, float sui);
+void KillStreak(entity player);

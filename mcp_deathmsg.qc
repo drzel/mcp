@@ -35,9 +35,14 @@ void(entity targ, entity attacker) ClientObituary =
 
 			bprint (PRINT_MEDIUM,targ.netname);
 			if(targ.team_no == attacker.team_no)
+			{
 				bprint (PRINT_MEDIUM," was telefragged by teammate ");
+			}
 			else
+			{
 				bprint (PRINT_MEDIUM," was telefragged by ");
+				KillStreak(attacker.owner);
+			}
 				
 			bprint (PRINT_MEDIUM,attacker.owner.netname);
 			bprint (PRINT_MEDIUM,"\n");
@@ -150,7 +155,7 @@ void(entity targ, entity attacker) ClientObituary =
 			{
 				//logfrag (attacker, targ);
 				//attacker.frags = attacker.frags + 1;
-
+				KillStreak(attacker);
 				rnum = attacker.weapon;
 				if (targ.deathtype == "nail")
 				{
@@ -384,4 +389,68 @@ void(entity targ, entity attacker) ClientObituary =
 			bprint (PRINT_MEDIUM," died\n");
 		}
 	}
+};
+
+
+void KillStreak(entity player) =
+{
+	player.killstreakcount = player.killstreakcount + 1;
+	if(player.killstreakcount < 3)
+		return;
+		
+	local string text = "";
+	local string file = "";
+	
+	if(player.killstreakcount == 3)	//killingspree
+	{
+		text = strcat(player.netname, " is on a \skilling spree\s (3 kills).\n");
+		file = "beta1/voice_killingspree.wav";
+	}
+	if(player.killstreakcount == 4)	//dominating
+	{
+		text = strcat(player.netname, " is \sdominating\s (4 kills).\n");
+		file = "beta1/voice_dominating.wav";
+	}
+	if(player.killstreakcount == 5)	//megakill
+	{
+		text = strcat(player.netname, " achieved a \smega kill\s (5 kills).\n");
+		file = "beta1/voice_megakill.wav";
+	}
+	if(player.killstreakcount == 6)	//unstoppable
+	{
+		text = strcat(player.netname, " is \sunstoppable\s (6 kills).\n");
+		file = "beta1/voice_unstoppable.wav";
+	}
+	if(player.killstreakcount == 7)	//wicked sick? ultrakill
+	{
+		text = strcat(player.netname, " achieved an \sultra kill\s (7 kills).\n");
+		file = "beta1/voice_ultrakill.wav";
+	}
+	if(player.killstreakcount == 8)	//monster kill
+	{
+		text = strcat(player.netname, " achieved a \sm-m-monster kill\s (8 kills).\n");
+		file = "beta1/voice_monsterkill.wav";
+	}
+	if(player.killstreakcount == 9)	//godlike
+	{
+		text = strcat(player.netname, " is \sgodlike\s (9 kills).\n");
+		file = "beta1/voice_godlike.wav";
+	}
+	if(player.killstreakcount >= 10) //holy shit beyond godlike
+	{
+		text = strcat(player.netname, " is \sbeyond godlike\s (",ftos(player.killstreakcount)," kills).\n");
+		file = "beta1/voice_holyshit.wav";
+	}
+	
+	local entity te = find(world, classname, "player");
+	while (te) 
+	{
+		if (infokey(te, "killstreaks") != "0")
+		{
+			stuffcmd(te, strcat("play ", file, "\n"));
+			sprint(te, PRINT_HIGH, text);
+		}
+		te = find(te, classname, "player");
+	}
+	
 };
