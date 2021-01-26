@@ -55,16 +55,7 @@ void() PutClientInServer =
 
 	SpawnPlayerZut();
 // oh, this is a hack!
-	//setmodel (self, "progs/eyes.mdl");
-	//modelindex_eyes = self.modelindex;
 
-	//setmodel (self, "progs/player.mdl");
-	//modelindex_player = self.modelindex;
-
-	//setsize (self, VEC_HULL_MIN, VEC_HULL_MAX);
-	
-	
-	//self.view_ofs = '0 0 22';
 
 // Mod - Xian (May.20.97)
 // Bug where player would have velocity from their last kill

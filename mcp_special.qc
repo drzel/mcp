@@ -7,7 +7,7 @@ void DetStickys()=
 	{
 		if (te.owner == self && te != world) 
 		{
-			te.think = StickyTrapExplode;
+			te.think = StickyTrapGroundExplode;
 			te.nextthink = time;
 			playsound = 1;
 		}
@@ -19,7 +19,7 @@ void DetStickys()=
 	{
 		if (te2.owner == self && te2 != world) 
 		{
-			te2.think = StickyTrapExplode;
+			te2.think = StickyTrapAirExplode;
 			te2.nextthink = time;
 			playsound = 1;
 		}
@@ -454,9 +454,10 @@ void HarpoonToward(entity targ, entity attacker) =
 	if ( (attacker != world) && (targ.movetype == MOVETYPE_WALK) )
 	{
 		
-			local float maxkb = 250;
+			local float maxkb = 350;
+			local float minkb = 100;
 			local float mindistance = 100;
-			local float maxdistance = 1000;
+			local float maxdistance = 800;
 			local float kb;
 			local vector difference = targ.origin - attacker.origin;
 			local float distance = rint(sqrt(pow(difference.x, 2) + pow(difference.y, 2) + pow(difference.z, 2)));
@@ -468,12 +469,12 @@ void HarpoonToward(entity targ, entity attacker) =
 			local float kbrange = maxdistance-mindistance;
 			kb = maxkb * (distance/kbrange);
 			kb = rint(kb);
-			if(kb < 50)
-				kb = 50;
+			if(kb < minkb)
+				kb = minkb;
 		
 		
 		
-	sprint(attacker, PRINT_HIGH, strcat("you pull ",trace_ent.netname, " for ", ftos(kb), " kb.\n"));
+		//sprint(attacker, PRINT_HIGH, strcat("you pull ",trace_ent.netname, " for ", ftos(kb), " kb.\n"));
 		local vector dir = targ.origin - attacker.origin;
 		dir = normalize(dir) * -1;
 		//dir = dir + '0 0 0.1';
@@ -481,8 +482,6 @@ void HarpoonToward(entity targ, entity attacker) =
 			targ.velocity.z = targ.velocity.z + 250;
 
 		targ.velocity = targ.velocity + dir * kb * 8;
-
-
 	}
 };
 

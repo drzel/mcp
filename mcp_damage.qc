@@ -57,11 +57,23 @@ void SetNextRespawn (entity ent, float sui) =
 
 void(entity targ, entity attacker) Killed =
 {
+	//ghostbuster sound
+	if(targ.iscloaked == 1 && targ.classname == "player")
+	{
+		local entity te = find(world, classname, "player");
+		while(te)
+		{
+			if(te != world)
+			{
+				stuffcmd(te, "play beta1/gbuster.wav\n");
+			}
+			te = find(te,classname,"player");
+		}	
+	}
+	
 	KillSound(targ, attacker);
 	SetNextRespawn(targ, 0);
 
-	
-	
 	local entity oself;
 	
 	oself = self;

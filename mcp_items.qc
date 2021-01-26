@@ -184,7 +184,7 @@ void () DropArmourShard = {
     newmis.touch = ArmourShard_Touch;
     newmis.classname = "armourshard";
 
-    newmis.nextthink = time + 120;
+    newmis.nextthink = time + LOOT_DURATION;
     newmis.think = SUB_Remove;
 };
 
@@ -205,7 +205,7 @@ void () DropHealthPack = {
     newmis.touch = HealthPack_Touch;
     newmis.classname = "healthpack";
 
-    newmis.nextthink = time + 120;
+    newmis.nextthink = time + LOOT_DURATION;
     newmis.think = SUB_Remove;
 };
 
@@ -228,7 +228,7 @@ void () DropGrenPack = {
     newmis.touch = GrenPackTouch;
     newmis.classname = "grenpack";
 
-    newmis.nextthink = time + 120;
+    newmis.nextthink = time + LOOT_DURATION;
     newmis.think = SUB_Remove;
 };
 

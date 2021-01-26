@@ -350,8 +350,19 @@ else
 		multicast(trace_endpos, MULTICAST_PVS);
     
 
-		if (other.classname == "player" && other.team_no != self.team_no)
-			trace_ent.velocity_z = trace_ent.velocity_z + 400;
+		if (trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
+		{
+			//trace_ent.velocity_z = trace_ent.velocity_z + 400;
+
+			
+			if(infokey(self, "healsound") != "0")
+				stuffcmd(self, "play beta1/healsound.wav\n");
+				
+			self.health = self.health + SHAFT_SELFHEAL;
+			
+			if(self.health > 150)
+				self.health = 150;
+		}
 		
 		if(trace_ent.team_no == self.team_no && trace_ent.classname == "player")
 		{
@@ -365,6 +376,8 @@ else
 			WriteCoord(MSG_MULTICAST, trace_endpos_y);
 			WriteCoord(MSG_MULTICAST, trace_endpos_z);
 			multicast(org, MULTICAST_PHS);
+			
+
 			
 			if(trace_ent.health < 100)
 			{
@@ -383,6 +396,11 @@ else
 				
 				if(infokey(self, "healsound") != "0")
 					stuffcmd(self, "play beta1/healsound.wav\n");
+					
+				self.health = self.health + SHAFT_SELFHEAL;
+			
+				if(self.health > 150)
+					self.health = 150;
 			}
 
 		}
@@ -415,7 +433,7 @@ else
 			multicast(org, MULTICAST_PHS);
 			}
 			
-			T_Damage (trace_ent, self, self, 7);
+			T_Damage (trace_ent, self, self, 9);
 
 
 		}
@@ -463,7 +481,7 @@ void() StickyDirectExplode =
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, 120, world, "sticky_direct");
+	T_RadiusDamage (self, self.owner, STICKYDAMAGE_DIRECT, world, "sticky_direct");
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
@@ -476,14 +494,34 @@ void() StickyDirectExplode =
 	remove (self);
 };
 
-void() StickyTrapExplode =
+void() StickyTrapAirExplode =
 {
 	if (self.voided) {
 		return;
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, 120, world, "sticky_trap");
+	T_RadiusDamage (self, self.owner, STICKYDAMAGE_AIRBURST, world, "sticky_trap");
+	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+
+	remove (self);
+};
+
+void() StickyTrapGroundExplode =
+{
+	if (self.voided) {
+		return;
+	}
+	self.voided = 1;
+
+	T_RadiusDamage (self, self.owner, STICKYDAMAGE_GROUND, world, "sticky_trap");
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);

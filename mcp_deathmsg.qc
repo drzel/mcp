@@ -252,7 +252,8 @@ void(entity targ, entity attacker) ClientObituary =
 				{
 					deathstring = " is charred by ";
 					deathstring2 = "'s flash grenade\n" ;
-				
+					SoundTeam (TEAM_RED, world, "beta1/toasty.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/toasty.wav");
 				}
 				else if (targ.deathtype == "grenade_bigproxy")
 				{
@@ -363,6 +364,8 @@ void(entity targ, entity attacker) ClientObituary =
 			if (targ.deathtype == "falling")
 			{
 				bprint (PRINT_MEDIUM," fell to his death\n");
+				SoundTeam (TEAM_RED, world, "beta1/pancake.wav");
+				SoundTeam (TEAM_BLUE, world, "beta1/pancake.wav");
 				return;
 			}
 			if (targ.deathtype == "nail" || targ.deathtype == "supernail")

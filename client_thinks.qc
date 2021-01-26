@@ -72,6 +72,19 @@ void() PlayerDeathThink =
 	self.button2 = 0;
 	if(time > self.nextrespawn)
 		respawn();
+	else
+	{
+		if(time < self.cnt)
+			return; 
+			
+		local float rtimeleft = ceil(self.nextrespawn - time);
+		self.cnt = time + 0.75;	//next avail check
+		if(rtimeleft == 1)
+			sprint(self,PRINT_HIGH, strcat("you can respawn in: ",ftos(rtimeleft)," second.\n"));
+		else
+			sprint(self,PRINT_HIGH, strcat("you can respawn in: ",ftos(rtimeleft)," second.\n"));
+		stuffcmd(self, "play beta1/error.wav\n");
+	}
 };
 
 

@@ -821,7 +821,7 @@ string cprint_waitingforplayers;
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.04\s (23/jan/2021)"
+#define MCPVERSION				"version \sbeta 1.06\s (26/jan/2021)"
 
 #define FLAG_RESET				60
 #define FLAG_TOSSSPEED				600
@@ -849,7 +849,9 @@ string cprint_waitingforplayers;
 #define MCPFLAGSTATE_CAPPED			4
 #define MCPFLAGSTATE_THROWN			5
 
-#define POINTINTERVAL				3		//seconds between awarding a point to team
+#define POINTINTERVAL				2		//seconds between awarding a point to team
+
+#define LOOT_DURATION				20		//time before backpacks/health/grens drops from death etc expire
 
 #define PLAYERSTATE_NOTREADY			0
 #define PLAYERSTATE_READY			1
@@ -882,13 +884,20 @@ string cprint_waitingforplayers;
 #define HARPOON_SPEED				1750
 #define HARPOON_MAXKNOCKBACK			250
 #define HARPOON_DAMAGE				25
+
 #define SHAFT_HEAL				5
-#define CLIMBINGNAIL_DURATION			2
-#define CLIMBINGNAIL_BOOST			300
+#define SHAFT_SELFHEAL				2
+
+#define CLIMBINGNAIL_DURATION			3
+#define CLIMBINGNAIL_BOOST			350
 
 #define MENU_NONE				0
 #define	MENU_SELECTTEAM				1
 #define	MENU_SELECTROLE				2
+
+#define STICKYDAMAGE_DIRECT			120	
+#define STICKYDAMAGE_GROUND			120
+#define STICKYDAMAGE_AIRBURST			60
 
 #define TEAM_NONE				0
 #define TEAM_BLUE				1
@@ -1027,6 +1036,7 @@ string cprint_waitingforplayers;
 #define MCPFLAG_SKIN_WHITE			0
 #define MCPFLAG_SKIN_BLUE			1	
 #define MCPFLAG_SKIN_RED			2
+
 
 
 

@@ -89,7 +89,7 @@ void DownloadShit(float imp) =
 	}
 	else if(imp == IMP_GB4)
 	{
-		stuffcmd(self, "download skins/blue_tra.pcx\n");
+		stuffcmd(self, "download skins/blue_bom.pcx\n");
 	}
 	if(imp == IMP_GB5)
 	{
@@ -109,7 +109,7 @@ void DownloadShit(float imp) =
 	}
 	else if(imp == IMP_GR4)
 	{
-		stuffcmd(self, "download skins/red_tra.pcx\n");
+		stuffcmd(self, "download skins/red_bom.pcx\n");
 	}
 	else if(imp == IMP_GR5)
 	{

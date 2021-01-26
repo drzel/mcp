@@ -177,6 +177,7 @@ void RefreshObjectiveString() =
 			line1 = "\n";
 			line2 = "\n";
 		}
+		
 	}
 	
 	if(infokey(self, "obj") == "2")
@@ -236,6 +237,7 @@ void CPrintRefresh() =
 		if(infokey(self, "sbflip") == "1")
 			centerprint(self, strcat(sb1space, self.cprint_obj, sb2space, self.cprint_id));
 		else
+
 			centerprint(self, strcat(sb1space, self.cprint_id, sb2space, self.cprint_obj));
 	}
 	else if(matchstate == MATCHSTATE_WAITINGFORPLAYERS)

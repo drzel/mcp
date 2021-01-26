@@ -74,10 +74,10 @@ void sprite_touch() =
 		else if(self.team_no == ROLE_SUPPORT)
 		{
 			l1 = "\n\s[\ssupport\s]\s\n";
-			l2 = "\sweapon :\s (shaft) - lightning gun, can heal teammates\n";
+			l2 = "\sweapon :\s (shaft) - shaft heals owner on damage, heals teammates (owner gets healed as well)\n";
 			l3 = "\sgrenade:\s (leech) - portion of damage dealt to enemy heals owner\n";
 			l4 = "\sspecial:\s (teleball) - press once to launch a teleball, again to teleport to the teleballs location\n";
-			l5 = "\spassive:\s (overheal) -  leech grenade can overheal user to 150 health (decays over time)\n";
+			l5 = "\spassive:\s (overheal) -  leech gren and shaft can overheal user to 150 health (decays)\n";
 		}
 		else
 		{
@@ -183,6 +183,7 @@ void DeathMCPFlag () =
 		return;
 		
 	ChangeMCPFlagState(MCPFLAGSTATE_DROPPED, self);
+	self.items = self.items - (self.items & IT_KEY1);
 };
 
 void ThrowMCPFlag () =
@@ -194,6 +195,7 @@ void ThrowMCPFlag () =
 		return;
 		
 	ChangeMCPFlagState(MCPFLAGSTATE_THROWN, self);
+	self.items = self.items - (self.items & IT_KEY1);
 };
 
 void mcpflagcap_touch() =
@@ -339,6 +341,17 @@ void mcpflag_loose() =
 		{
 			ChangeMCPFlagState(MCPFLAGSTATE_RESET, gm);
 		}
+};
+
+void mcpflag_carried()=
+{
+	self.nextthink = time + 0.1;
+	
+	if(self.owner.ismoving == 0)
+		return;
+
+	//particle(self.owner.origin, '0 0 0', 288, 32);
+	//multicast(
 };
 
 
@@ -487,7 +500,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		setorigin (mcpflag, org);
 		
 		mcpflag.view_ofs = mcpflag.origin - o.origin;
-		
+		o.items = o.items | IT_KEY1;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
 		
 		mcpflag.movetype = MOVETYPE_FOLLOW;
@@ -495,7 +508,8 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		mcpflag.solid = SOLID_NOT;
 			
 		mcpflag.touch = SUB_Null;
-		mcpflag.think = SUB_Null;
+		mcpflag.think = mcpflag_carried;
+		mcpflag.nextthink = time + 0.1;
 	}
 	if(zfstate == MCPFLAGSTATE_CAPPED)
 	{
@@ -869,6 +883,69 @@ void CreateReadyUpSpammer() =
 	te.nextthink = time + 5;
 };
 
+void cheatchecker_think()=
+{
+	self.nextthink = time + 2;
+	
+	local entity te = find(world, classname, "player");
+	while (te) 
+	{
+		if (te.isconnected)
+		{
+			if(te.team_no == TEAM_BLUE)
+			{	
+				if (infokey(te, "topcolor") == "4")
+				{
+					stuffcmd(te, "topcolor 13\n");
+				}
+				if (infokey(te, "bottomcolor") != "13")
+				{
+					stuffcmd(te, "bottomcolor 13\n");
+				}
+				if( infokey(te, "team") != "blue")
+				{
+					stuffcmd(te, "team blue\n");
+				}
+			}
+			else if(te.team_no == TEAM_RED)
+			{
+				if (infokey(te, "bottomcolor") != "4")
+				{
+					stuffcmd(te, "bottomcolor 4\n");
+				}
+				if (infokey(te, "topcolor") == "13")
+				{
+					stuffcmd(te, "topcolor 4\n");
+				}
+				if( infokey(te, "team") != "red")
+				{
+					stuffcmd(te, "team red\n");
+				}
+			}
+			else
+			{
+				if( infokey(te, "color") != "0 0")
+				{
+					stuffcmd(te, "color 0 0\n");
+				}
+				if( infokey(te, "team") != "none")
+				{
+					stuffcmd(te, "team none\n");
+				}
+			}
+		}
+		te = find(te, classname, "player");
+	}
+};
+
+void CreateCheatChecker() =
+{
+	local entity te;
+	te = spawn();			
+	te.classname = "cheatchecker";
+	te.think = cheatchecker_think;
+	te.nextthink = time + 2;
+};
 
 void gm_think_init() =
 {
@@ -886,7 +963,10 @@ void gm_think_init() =
 		return;
 	}
 	CreateReadyUpSpammer();
+	CreateCheatChecker();
 };
+
+
 
 void CreateGameManager() =
 {
@@ -908,6 +988,8 @@ void CreateGameManager() =
 	role_support_max 	= GetInfo(world, "role_support_max", "9");
 	
 };
+
+
 
 
 

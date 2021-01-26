@@ -283,6 +283,7 @@ void () ExplodeFlashGrenade = {
     WriteCoord(MSG_MULTICAST, self.origin_y);
     WriteCoord(MSG_MULTICAST, self.origin_z);
     multicast(self.origin, MULTICAST_PHS);
+    ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 vector org;
     float dam, frac;
@@ -603,7 +604,7 @@ void BearTrapOpen_Touch() = {
 
 
 void BearTrap_Think() = {
-    self.nextthink = time + 0.1;
+    self.nextthink = time + 0.05;
 
     if (self.velocity == '0 0 0') {
         if (self.flags & FL_ONGROUND) {
@@ -654,7 +655,7 @@ void BearTrap_Think() = {
 
 void ExplodeBearTrap()=
 {
-	self.nextthink = time + 0.1;
+	self.nextthink = time + 0.05;
 	self.think = BearTrap_Think;
 };
 

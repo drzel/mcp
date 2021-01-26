@@ -355,6 +355,9 @@ void zPreCache() =
 	
 	
 	precache_sound("beta1/humiliation.wav");
+	precache_sound("beta1/toasty.wav");
+	precache_sound("beta1/gbuster.wav");
+	precache_sound("beta1/pancake.wav");
 	
 	precache_sound("beta1/buzzer.wav");
 	precache_sound("beta1/scoretick_team.wav");

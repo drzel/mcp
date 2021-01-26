@@ -112,7 +112,7 @@ void StickyTouch() =
 		self.velocity = '0 0 0';
 		self.avelocity = '0 0 0';
 		self.movetype = MOVETYPE_NONE;
-		self.think = StickyTrapExplode;
+		self.think = StickyTrapGroundExplode;
 		self.nextthink = time + 480;
 		CheckStickyLimit();
 		if(self.owner.team_no == TEAM_BLUE)

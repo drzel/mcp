@@ -42,7 +42,6 @@ void SetTeamFragsColourName() =
 			self.frags = 0;
 			return;
 		}
-	
 };
 
 float GetInfo (entity e, string setting, string defaultValue) =
@@ -417,6 +416,7 @@ entity MCPSpawnPoint () =
 
 void SetPlayerSkin() =
 {
+
 	local string prefix = "";
 	local string suffix = ""; 
 	if(self.team_no == TEAM_BLUE)
@@ -452,7 +452,6 @@ void SetPlayerSkin() =
 		suffix = "base";
 	}
 	stuffcmd(self, strcat("skin ",prefix,suffix,"\n"));
-	
 };
 void SetPlayerSpeed() =
 {

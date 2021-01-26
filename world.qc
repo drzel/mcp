@@ -169,7 +169,9 @@ void() InitBodyQue =
 void(entity ent) CopyToBodyQue =
 {
 	bodyque_head.angles = ent.angles;
-	bodyque_head.model = ent.model;
+	FO_SetModel(bodyque_head, "progs/player.mdl");
+	//bodyque_head.model = ent.model;
+	bodyque_head.skin = ent.skin;
 	bodyque_head.modelindex = ent.modelindex;
 	bodyque_head.frame = ent.frame;
 	bodyque_head.colormap = ent.colormap;
