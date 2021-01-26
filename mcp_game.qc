@@ -513,6 +513,8 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 	}
 	if(zfstate == MCPFLAGSTATE_CAPPED)
 	{
+		mcpflag.owner.items = mcpflag.owner.items - (mcpflag.owner.items & IT_KEY1);
+		
 		if(o.team_no == TEAM_BLUE)
 		{
 			mcpflag.skin = MCPFLAG_SKIN_BLUE;
