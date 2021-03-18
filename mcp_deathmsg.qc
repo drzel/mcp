@@ -129,6 +129,14 @@ void(entity targ, entity attacker) ClientObituary =
 					bprint (PRINT_MEDIUM," regrets using a frag grenade\n");
 				else if (targ.deathtype == "grenade_flash")
 					bprint (PRINT_MEDIUM," was incinerated by their own flash grenade\n");
+				else if (targ.deathtype == "clustermini_aoe")
+					bprint (PRINT_MEDIUM," got too close to his own spam\n");
+				else if (targ.deathtype == "clustermini_direct")
+					bprint (PRINT_MEDIUM," got too close to his own spam\n");
+				else if (targ.deathtype == "clusterbig_direct")
+					bprint (PRINT_MEDIUM," got too close to his own spam\n");
+				else if (targ.deathtype == "c4")
+					bprint (PRINT_MEDIUM," set the detpack and forgot to run\n");
 				else
 					bprint (PRINT_MEDIUM," becomes bored with life\n");
 				return;
@@ -219,10 +227,22 @@ void(entity targ, entity attacker) ClientObituary =
 					deathstring = " stepped on ";
 					deathstring2 = "'s bear trap\n";
 				}
+				else if (targ.deathtype == "c4")
+				{
+					deathstring = " reaches orbit via ";
+					deathstring2 = "'s detpack\n";
+				}
 				else if (targ.deathtype == "rocket_direct")
 				{
 					deathstring = " eats a direct rocket from ";
 					deathstring2 = "\n";
+				}
+				else if (targ.deathtype == "rocket_directquad")
+				{
+					deathstring = " was combo'd by ";
+					deathstring2 = "\n";
+					SoundTeam (TEAM_RED, world, "beta1/voice_combowhore.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/voice_combowhore.wav");
 				}
 				else if (targ.deathtype == "sticky_trap")
 				{
@@ -234,6 +254,24 @@ void(entity targ, entity attacker) ClientObituary =
 				{
 					deathstring = " caught a direct sticky from ";
 					deathstring2 = "\n" ;
+				
+				}
+				else if (targ.deathtype == "clusterbig_direct")
+				{
+					deathstring = " caught a direct pineapple from ";
+					deathstring2 = "\n" ;
+				
+				}
+				else if (targ.deathtype == "clustermini_direct")
+				{
+					deathstring = " caught a pineapple from ";
+					deathstring2 = "\n" ;
+				
+				}
+				else if (targ.deathtype == "clustermini_aoe")
+				{
+					deathstring = " succumbed to ";
+					deathstring2 = "'s pineapple spam\n" ;
 				
 				}
 				else if (targ.deathtype == "grenade_leech")

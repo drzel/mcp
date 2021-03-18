@@ -580,6 +580,10 @@ void() hurt_touch =
 		self.think = hurt_on;
 		self.nextthink = time + 1;
 	}
+	if(other.classname == "item_mcpflag")
+	{
+		mcpflag.cnt = time + 5;
+	}
 
 	return;
 };

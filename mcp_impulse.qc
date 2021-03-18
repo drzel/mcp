@@ -48,7 +48,7 @@ void(vector org, vector vel) SpawnMeatSpray =
 	missile.nextthink = time + 1;
 	missile.think = SUB_Remove;
 
-	setmodel (missile, "progs/zom_gib.mdl");
+	FO_SetModel (missile, "progs/zom_gib.mdl");
 	setsize (missile, '0 0 0', '0 0 0');            
 	setorigin (missile, org);
 };
@@ -260,8 +260,31 @@ void() T_MissileTouch =
 	
 	if (other.health)
 	{
-		other.deathtype = "rocket_direct";
-		T_Damage (other, self, self.owner, damg );
+		local float isharp = 0 ;
+			
+		local entity te = find(world, classname, "harpoontimer");
+		while (te) 
+		{
+			if (te.owner == other && te != world) 
+			{
+				te.nextthink = time;
+				isharp = 1;
+			}
+			
+			te = find(te, classname, "harpoontimer");
+		}
+		
+		if(isharp)
+		{	
+			//bprint(2,"isharped\n");
+			other.deathtype = "rocket_directquad";
+			T_Damage (other, self, self.owner, damg * 4 );
+		}
+		else
+		{
+			other.deathtype = "rocket_direct";
+			T_Damage (other, self, self.owner, damg );
+		}
 	}
 
 	// don't do radius damage to the other, because all the damage
@@ -433,7 +456,7 @@ else
 			multicast(org, MULTICAST_PHS);
 			}
 			
-			T_Damage (trace_ent, self, self, 9);
+			T_Damage (trace_ent, self, self, SHAFT_DAMAGE);
 
 
 		}
@@ -473,6 +496,65 @@ else
 
 };
 
+void() ClusterMiniExplode =
+{
+	if (self.voided) {
+		return;
+	}
+	self.voided = 1;
+
+	T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_AOE, world, "clustermini_aoe");
+	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+
+	remove (self);
+};
+
+void() ClusterBigDirectExplode =
+{
+	if (self.voided) {
+		return;
+	}
+	self.voided = 1;
+
+	T_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct");
+	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+
+	remove (self);
+};
+
+void() ClusterMiniDirectExplode =
+{
+	if (self.voided) {
+		return;
+	}
+	self.voided = 1;
+
+	T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_DIRECT, world, "clustermini_direct");
+	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+
+	remove (self);
+};
 
 void() StickyDirectExplode =
 {
@@ -588,36 +670,7 @@ void() W_FireSuperSpikes =
 	WriteByte (MSG_ONE, SVC_SMALLKICK);
 };
 
-void(float ox) W_FireSpikes =
-{
-	local vector    dir;
-	local entity    old;
-	
-	makevectors (self.v_angle);
-	
-	if (self.ammo_nails >= 2 && self.weapon == IT_SUPER_NAILGUN)
-	{
-		W_FireSuperSpikes ();
-		return;
-	}
 
-	if (self.ammo_nails < 1)
-	{
-		//self.weapon = W_BestWeapon ();
-		//W_SetCurrentAmmo ();
-		return;
-	}
-
-	FO_Sound(self, CHAN_WEAPON, "weapons/rocket1i.wav", 1, ATTN_NORM);
-	self.attack_finished = time + 0.2;
-	if (deathmatch != 4)
-		self.currentammo = self.ammo_nails = self.ammo_nails - 1;
-	dir = aim (self, 1000);
-	launch_spike (self.origin + '0 0 16' + v_right*ox, dir);
-
-	msg_entity = self;
-	WriteByte (MSG_ONE, SVC_SMALLKICK);
-};
 
 
 
@@ -696,12 +749,14 @@ ImpulseCommands
 
 void() MenuInputImpulses =
 {	
+
 	//bprint(2,strcat(ftos(self.impulse"notrchd\n");
 	if(self.menu == MENU_NONE)
+	{
 		return;
+	}
 	if (self.impulse >= 1 && self.impulse <= 8)
 	{
-		
 		MenuInput(self.impulse);
 	}
 	
@@ -713,6 +768,7 @@ void() MenuInputImpulses =
 
 void() DeadOrAliveImpulses = 
 {	
+
 	if(self.impulse == IMP_GB1 || self.impulse == IMP_GB2 || self.impulse == IMP_GB3 ||self.impulse == IMP_GB4 || self.impulse == IMP_GB5 || 
 	self.impulse == IMP_GR1 || self.impulse == IMP_GR2 || self.impulse == IMP_GR3 || self.impulse == IMP_GR4 || self.impulse == IMP_GR5 ||  
 	self.impulse == IMP_GM1 || self.impulse == IMP_GM2 ||  self.impulse == IMP_GM3)
@@ -801,13 +857,34 @@ void() DeadOrAliveImpulses =
 		
 	if(self.impulse == IMP_GOSUPPORT)
 		ChangeRole(ROLE_SUPPORT);
-
+		
+	if(self.impulse == IMP_QSHOT1_START)
+		StartQuickShot(1);
+	if(self.impulse == IMP_QSHOT2_START)
+		StartQuickShot(2);
+	if(self.impulse == IMP_QSHOT3_START)
+		StartQuickShot(3);
+	if(self.impulse == IMP_QSHOT4_START)
+		StartQuickShot(4);
+		
+	if(self.impulse == IMP_QSHOT1_STOP)
+		StopQuickShot(1);
+	if(self.impulse == IMP_QSHOT2_STOP)
+		StopQuickShot(2);
+	if(self.impulse == IMP_QSHOT3_STOP)
+		StopQuickShot(3);
+	if(self.impulse == IMP_QSHOT4_STOP)
+		StopQuickShot(4);
 
 };
 
 void() AliveImpulses =
 {
-
+	if(self.impulse == IMP_1HP)
+	{
+		self.health = 1;
+		self.impulse = 0;
+	}
 	if (self.impulse == IMP_THROWMCPFLAG)
 		ThrowMCPFlag();
 	if (self.impulse == IMP_SPECIAL)
@@ -837,7 +914,9 @@ void() AliveAttackFinishedImpulses =
 	if (self.impulse == IMP_KEYBOARD4)
 		W_ZutChangeWeapon (self.impulse);
 	if (self.impulse == IMP_RELOAD)
-		ReloadWeapon();
+		ReloadWeapon(VisualWeapon());
+	if(self.impulse == IMP_RELOADNEXT)
+		ReloadNext();
 	if(self.impulse == IMP_NEXTWEAPON)
 		NextWeapon();
 	if(self.impulse == IMP_PREVWEAPON)

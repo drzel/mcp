@@ -7,11 +7,15 @@ void ClearPlayerState() =
 	//KillLittleProxy();
 	DisableGrenEffectOnDeath();
 	DisableHarpoonPull();
-	DestroyBeartraps();
-	DetStickys();
+	KillHarpoonTimers();
+	KillC4();
+	//DestroyBeartraps();
+	//DetStickys();
 	DeathMCPFlag();
+	
 	self.reload_complete = 0;
 	self.isreloading = 0;
+
 	self.cloak_complete = 0;
 	self.iscloaked = 0;
 	self.gren = world;
@@ -155,7 +159,7 @@ void SpawnPlayerZut () =
 		setmodel(self, "progs/eyes.mdl");
 		modelindex_eyes = self.modelindex;
 
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 
 		self.items = 0;
@@ -181,7 +185,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_NAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_RECON;
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_NAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -199,7 +203,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_RAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_ASSASSIN;
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_RAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -216,7 +220,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_ROCKETLAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_FIGHTER;
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_ROCKETLAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -233,7 +237,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_PIPELAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_BOMBER;
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_PIPELAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -250,7 +254,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_SHAFT;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_SUPPORT;
-		FO_SetModel(self, "progs/player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_SHAFT;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -261,11 +265,11 @@ void SpawnPlayerZut () =
 	}
 	player_stand1();
 	SetTeamFragsColourName();
-	W_SetCurrentWeaponModel();
-	W_SetCurrentAmmo();
+	ChangeWeaponModel(self.weapon);
+	ChangeHudAmmo(self, self.weapon);
 	ClearPlayerState();
 	SpawnAliasHelper();
-	SetPlayerSkin();
+	SetPlayerModelSkin();
 	ExecTeamConfig();
 	ExecClassConfig();
 	SetPlayerSpeed();
@@ -411,7 +415,42 @@ entity MCPSpawnPoint () =
 };
 
 
+void SetPlayerModelSkin() =
+{
+	// 0 - base  
+	// 1 - b_recon 		// 6 - r recon
+	// 2 - b assasssin	// 7 - r assassin
+	// 3 - b fighter	// 8 - r fighter
+	// 4 - b bomber		// 9 - r bomber
+	// 5 - b support	// 10 - r support
+	if(self.team_no == TEAM_BLUE)
+	{
+		if(self.role == ROLE_RECON)
+			self.skin = 1;
+		if(self.role == ROLE_ASSASSIN)
+			self.skin = 2;
+		if(self.role == ROLE_FIGHTER)
+			self.skin = 3;
+		if(self.role == ROLE_BOMBER)
+			self.skin = 4;
+		if(self.role == ROLE_SUPPORT)
+			self.skin = 5;
+	}
+	if(self.team_no == TEAM_RED)
+	{
+		if(self.role == ROLE_RECON)
+			self.skin = 6;
+		if(self.role == ROLE_ASSASSIN)
+			self.skin = 7;
+		if(self.role == ROLE_FIGHTER)
+			self.skin = 8;
+		if(self.role == ROLE_BOMBER)
+			self.skin = 9;
+		if(self.role == ROLE_SUPPORT)
+			self.skin = 10;
+	}
 
+};
 
 
 void SetPlayerSkin() =
@@ -509,6 +548,34 @@ void KillReloadEnt()=
 			remove(te);
 		}
 		te = find(te, classname, "reload");
+        }
+};
+void KillHarpoonTimers()=
+{
+	local entity te = find(world, classname, "harpoontimer");
+	while (te) 
+	{
+		if (te.owner == self && te != world) 
+		{
+			te.nextthink = time;
+			
+		}
+		te = find(te, classname, "harpoontimer");
+        }
+};
+
+void KillC4()=
+{
+	local entity te = find(world, classname, "c4");
+	while (te) 
+	{
+		if (te.owner == self && te != world) 
+		{
+			te.think = C4_Fizzle;
+			te.nextthink = time;
+			
+		}
+		te = find(te, classname, "c4");
         }
 };
 

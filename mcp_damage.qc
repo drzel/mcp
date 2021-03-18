@@ -184,7 +184,7 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 // figure momentum add
 		if(inflictor.classname == "harpoon" && targ.team_no != attacker.team_no && inflictor.voided == 0)
 		{
-			HarpoonToward(targ, attacker);
+			HarpoonToward(targ, inflictor, attacker);
 			local float rng = MyRNG(2);
 			if(rng == 1)
 				FO_Sound(attacker, CHAN_AUTO, "beta1/harpoon_enemy1.wav", 1, ATTN_NORM);

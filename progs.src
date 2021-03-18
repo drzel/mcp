@@ -20,6 +20,7 @@ playermodel.qc
 spectate.qc
 world.qc
 
+lordy_classleash.qc
 mcp_game.qc
 mcp_items.qc
 mcp_impulse.qc
@@ -35,3 +36,4 @@ mcp_menu.qc
 mcp_reload.qc
 mcp_spawn.qc
 mcp_misc.qc
+mcp_quickshot.qc

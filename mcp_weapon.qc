@@ -66,7 +66,7 @@ float Imp2Weap(float imp) =
 	if(imp == 4)
 		return slot4;
 	
-	bprint(2,"this shouldnt be reached\n");
+	//bprint(2,"this shouldnt be reached\n");
 	return WPN_NONE;	
 };
 
@@ -93,6 +93,35 @@ float Weap2Imp(float wpn) =
 		return 4;
 };
 
+
+void ClusterBigTouch() =
+{
+    if (other == self.owner)
+        return;
+
+    if (other.takedamage == DAMAGE_AIM) {
+        ClusterBigDirectExplode();
+        return;
+    }
+    FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
+    ClusterBigSplit();
+    
+
+};
+
+void ClusterMiniTouch() =
+{
+	if (other == self.owner)
+	{
+		return;
+	}
+	if (other.takedamage == DAMAGE_AIM) {
+		ClusterMiniDirectExplode();
+		return;
+    }
+    FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
+  
+};
 
 void StickyTouch() = 
 {
@@ -171,49 +200,49 @@ string GetWeaponModel() =
 	return result;
 };
 
-void W_SetCurrentAmmo() =
+void ChangeHudAmmo(entity owner, float wpn) =
 {
-	self.items = self.items - ( self.items & ( IT_SHELLS | IT_NAILS | IT_ROCKETS | IT_CELLS) );
-	if(self.weapon == WPN_AXE)
+	owner.items = owner.items - ( owner.items & ( IT_SHELLS | IT_NAILS | IT_ROCKETS | IT_CELLS) );
+	if(wpn == WPN_AXE)
 	{
-		self.currentammo = 0;
+		owner.currentammo = 0;
 	}
-	else if (self.weapon == WPN_SHOTGUN)
+	else if (wpn == WPN_SHOTGUN)
 	{
-		self.currentammo = self.clip_curr_tertiary;
-		self.items = self.items | IT_SHELLS;
+		owner.currentammo = owner.clip_curr_tertiary;
+		owner.items = owner.items | IT_SHELLS;
 	}
-	else if (self.weapon == WPN_SUPERSHOTGUN)
+	else if (wpn == WPN_SUPERSHOTGUN)
 	{
-		self.currentammo = self.clip_curr_secondary;
-		self.items = self.items | IT_SHELLS;
+		owner.currentammo = owner.clip_curr_secondary;
+		owner.items = owner.items | IT_SHELLS;
 	}
-	else if (self.weapon == WPN_NAILGUN || self.weapon == WPN_RAILGUN)
+	else if (wpn == WPN_NAILGUN || wpn == WPN_RAILGUN)
 	{
-		self.currentammo = self.clip_curr_primary;
-		self.items = self.items | IT_NAILS;
+		owner.currentammo = owner.clip_curr_primary;
+		owner.items = owner.items | IT_NAILS;
 	}
-	else if (self.weapon == WPN_ROCKETLAUNCHER || self.weapon == WPN_PIPELAUNCHER)
+	else if (wpn == WPN_ROCKETLAUNCHER || wpn == WPN_PIPELAUNCHER)
 	{
-		self.currentammo = self.clip_curr_primary;
-		self.items = self.items | IT_ROCKETS;
+		owner.currentammo = owner.clip_curr_primary;
+		owner.items = owner.items | IT_ROCKETS;
 	}
-	else if (self.weapon == WPN_SHAFT)
+	else if (wpn == WPN_SHAFT)
 	{
-		self.currentammo = self.clip_curr_primary;
-		self.items = self.items | IT_CELLS;
+		owner.currentammo = owner.clip_curr_primary;
+		owner.items = owner.items | IT_CELLS;
 	}
 	else
 	{
-		self.currentammo = 0;
+		owner.currentammo = 0;
 	}
 };
 
-void W_SetCurrentWeaponModel() =
+void ChangeWeaponModel(float wpn) =
 {
 	player_run ();          // get out of any weapon firing states
 
-	if (self.weapon == WPN_AXE)
+	if (wpn == WPN_AXE)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -229,7 +258,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_SUPERSHOTGUN)
+	else if (wpn == WPN_SUPERSHOTGUN)
 	{	
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -245,7 +274,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_SHOTGUN)
+	else if (wpn== WPN_SHOTGUN)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -261,7 +290,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_NAILGUN)
+	else if (wpn == WPN_NAILGUN)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -273,7 +302,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_RAILGUN)
+	else if (wpn == WPN_RAILGUN)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -289,7 +318,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_ROCKETLAUNCHER)
+	else if (wpn == WPN_ROCKETLAUNCHER)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -301,7 +330,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_PIPELAUNCHER)
+	else if (wpn == WPN_PIPELAUNCHER)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -313,7 +342,7 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else if (self.weapon == WPN_SHAFT)
+	else if (wpn == WPN_SHAFT)
 	{
 		if(self.team_no == TEAM_BLUE)
 		{
@@ -325,10 +354,15 @@ void W_SetCurrentWeaponModel() =
 		}
 		self.weaponframe = 0;
 	}
-	else
+	else if (wpn == WPN_RELOAD)
 	{
 		self.weaponmodel = "";
 		self.weaponframe = 0;
+	}
+	else
+	{
+		self.weaponmodel = "";
+		self.weaponframe = 0;		
 	}
 };
 
@@ -396,6 +430,8 @@ void LastWeapon() =
 	self.impulse = 0;
 	if (self.isreloading == 1)
 		return;
+	if(self.weapon == self.lastweapon)
+		return;
 
 	W_ZutChangeWeapon (Weap2Imp(self.lastweapon));
 };
@@ -417,14 +453,14 @@ void W_ZutChangeWeapon(float imp) =
 	self.lastweapon = self.weapon;
 		
 	self.weapon = wpn;
-	W_SetCurrentWeaponModel();
-	W_SetCurrentAmmo();
+	ChangeWeaponModel(self.weapon);
+	ChangeHudAmmo(self,self.weapon);
 };
 
 
 
 
-void() W_ZutAttack =
+void MCP_Attack(float wpn) =
 {
 	if (self.isreloading == 1)
 		return;
@@ -434,7 +470,7 @@ void() W_ZutAttack =
 	//makevectors     (self.v_angle);	// calculate forward angle for velocity
 	//self.show_hostile = time + 1;	// wake monsters up
 
-	if (self.weapon == WPN_AXE)
+	if (wpn == WPN_AXE)
 	{
 		self.attack_finished = time + 0.5;
 		FO_Sound(self, CHAN_WEAPON, "weapons/ax1.wav", 1, ATTN_NORM);
@@ -488,13 +524,13 @@ void() W_ZutAttack =
 			multicast (org, MULTICAST_PVS);
 		}
 	}
-	else if (self.weapon == WPN_SHOTGUN)
+	else if (wpn == WPN_SHOTGUN)
 	{
 		self.attack_finished = time + 0.5;
 		player_shot1();
 		
 		self.clip_curr_tertiary = self.clip_curr_tertiary - 1;
-		W_SetCurrentAmmo();
+		ChangeHudAmmo(self,WPN_SHOTGUN);
 		
 		local vector dir;
 
@@ -508,17 +544,18 @@ void() W_ZutAttack =
 		
 		if(self.clip_curr_tertiary == 0)
 		{
-			ReloadWeapon();
+			ReloadWeapon(WPN_SHOTGUN);
 		}
 	
 	}
-	else if (self.weapon == WPN_SUPERSHOTGUN)
+	else if (wpn == WPN_SUPERSHOTGUN)
 	{
+		/*
 		self.attack_finished = time + 0.7;
 		player_shot1();
 		
 		self.clip_curr_secondary = self.clip_curr_secondary - 1;
-		W_SetCurrentAmmo();
+		ChangeHudAmmo(self,WPN_SUPERSHOTGUN);
 		
 		local vector dir2;
 
@@ -531,21 +568,52 @@ void() W_ZutAttack =
 		FireBullets (14, dir2, '0.14 0.08 0');
 		if(self.clip_curr_secondary == 0)
 		{
-			ReloadWeapon();
+			ReloadWeapon(WPN_SUPERSHOTGUN);
+		}
+		*/
+		
+		self.attack_finished = time + 0.5;
+		player_shot1();
+		
+		self.clip_curr_secondary = self.clip_curr_secondary - 1;
+		ChangeHudAmmo(self,WPN_SUPERSHOTGUN);
+		
+		local vector dir2;
+
+		FO_Sound(self ,CHAN_WEAPON, "weapons/shotgn2.wav", 1, ATTN_NORM); 
+
+		msg_entity = self;
+		WriteByte (MSG_ONE, SVC_BIGKICK);
+	
+		dir2 = aim (self, 100000);
+		
+		
+		FireBullets (14, dir2, '0.14 0.08 0');
+		if(self.v_angle_x > 25)
+		{
+			
+			local float lookdown = self.v_angle_x/60 * 350;
+			//bprint(2,strcat(ftos(lookdown)," lokdwn\n"));
+			//self.velocity = (normalize(dir2) * -1)  * lookdown;
+			self.velocity.z = lookdown;
+		}
+		if(self.clip_curr_secondary == 0)
+		{
+			ReloadWeapon(WPN_SUPERSHOTGUN);
 		}
 	}
-	else if (self.weapon == WPN_NAILGUN)
+	else if (wpn == WPN_NAILGUN)
 	{
-		player_nail1();
+			player_nail1();
 
 	}
-	else if (self.weapon == WPN_ROCKETLAUNCHER)
+	else if (wpn == WPN_ROCKETLAUNCHER)
 	{
 		player_rocket1();
 		self.attack_finished = time + 0.8;
 
 		self.clip_curr_primary = self.clip_curr_primary - 1;
-		W_SetCurrentAmmo();
+		ChangeHudAmmo(self,WPN_ROCKETLAUNCHER);
 	
 		FO_Sound(self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
 
@@ -555,47 +623,48 @@ void() W_ZutAttack =
 		SpawnMissile();
 		if(self.clip_curr_primary == 0)
 		{
-			ReloadWeapon();
+			ReloadWeapon(WPN_ROCKETLAUNCHER);
 		}
 	}
-	else if(self.weapon == WPN_SHAFT)
+	else if(wpn == WPN_SHAFT)
 	{
 		player_light1();
 		//self.attack_finished = time + 0.1;
 		FO_Sound(self, CHAN_AUTO, "weapons/lstart.wav", 1, ATTN_NORM);
 	}
-	else if(self.weapon == WPN_PIPELAUNCHER)
+	else if(wpn == WPN_PIPELAUNCHER)
 	{
 		player_rocket1();
 		self.attack_finished = time + 0.6; //0.6
 		
 		self.clip_curr_primary = self.clip_curr_primary - 1;
-		W_SetCurrentAmmo();
+		ChangeHudAmmo(self,WPN_PIPELAUNCHER);
 	
 		FO_Sound(self, CHAN_WEAPON, "weapons/grenade.wav", 1, ATTN_NORM);
 
 		msg_entity = self;
 		WriteByte (MSG_ONE, SVC_SMALLKICK);
 
-		SpawnSticky();
+		//SpawnSticky();
+		SpawnClusterGren();
 		
 		if(self.clip_curr_primary == 0)
 		{
-			ReloadWeapon();
+			ReloadWeapon(WPN_PIPELAUNCHER);
 		}
 	}
-	else if(self.weapon == WPN_RAILGUN)
+	else if(wpn == WPN_RAILGUN)
 	{
 		player_rocket1();
 		self.attack_finished = time + 0.5;
 		self.clip_curr_primary = self.clip_curr_primary - 1;
-		W_SetCurrentAmmo();
+		ChangeHudAmmo(self,WPN_RAILGUN);
 	
 		FO_Sound(self, CHAN_WEAPON, "beta1/railgun.wav", 1, ATTN_NORM);
 
 		msg_entity = self;
 		WriteByte (MSG_ONE, SVC_SMALLKICK);
-		ReloadWeapon();
+		ReloadWeapon(WPN_RAILGUN);
 		
 		makevectors (self.v_angle);
 		source = self.origin + '0 0 16';
@@ -770,7 +839,7 @@ void() superspike_touch =
 	{
 		spawn_touchblood (18);
 		other.deathtype = "supernail";
-		T_Damage (other, self, self.owner, 18);
+		T_Damage (other, self, self.owner, 12);
 	}
 	else
 	{
@@ -844,6 +913,51 @@ void SpawnMissile()=
 		
 };
 
+
+void SpawnMiniCluster(float x)
+{
+	local vector dir = normalize(self.velocity);
+	local float speed = vlen(self.velocity);
+	
+	local entity newmis1 = spawn ();
+	newmis1.voided = 0;
+	newmis1.owner = self.owner;
+	newmis1.movetype = MOVETYPE_BOUNCE;
+	newmis1.solid = SOLID_TRIGGER;
+	//newmis1.classname = "clustermini";
+	local vector dir2 = vectoangles(dir);
+	dir2_y = dir2_y + x * 6;
+	makevectors (dir2);
+	
+	local vector vec = normalize (v_forward);
+	vec_z = 0 - vec_z + (random() - 0.5) * 0.1;
+	
+	newmis1.velocity = vec * speed;
+	
+	FO_SetModel(newmis1, "progs/beta1/mcp_pinesmall.mdl");
+	if(self.owner.team_no == TEAM_BLUE)
+		newmis1.skin = 1;
+	if(self.owner.team_no == TEAM_RED)
+		newmis1.skin = 2;
+	setsize (newmis1, '0 0 0', '0 0 0'); 
+	//setsize (newmis1, '-4 -4 -4', '4 4 4');              
+	setorigin (newmis1, self.origin);
+	
+	newmis1.touch = ClusterMiniTouch;
+	newmis1.think = ClusterMiniExplode;
+	newmis1.nextthink = time + 1.5;
+};
+
+void ClusterBigSplit() =
+{
+	SpawnMiniCluster(-1);
+	SpawnMiniCluster(0);
+	SpawnMiniCluster(1);
+	remove(self);
+};
+
+
+
 void SpawnSticky()=
 {
 	
@@ -871,11 +985,53 @@ void SpawnSticky()=
 		newmis.angles = vectoangles(newmis.velocity);
 	
 		newmis.touch = StickyTouch;
+		//newmis.touch = MultiGrenTouch;
 
 		newmis.think = SUB_Remove;
 		newmis.nextthink = time + 5;
 
 		FO_SetModel(newmis, "progs/beta1/mcp_sticky.mdl");
+		if(self.team_no == TEAM_BLUE)
+			newmis.skin = 1;
+		if(self.team_no == TEAM_RED)
+			newmis.skin = 2;
+		setsize (newmis, '0 0 0', '0 0 0');             
+		setorigin (newmis, self.origin);
+};
+
+void SpawnClusterGren()=
+{
+	
+		newmis = spawn ();
+		newmis.voided=0;
+		newmis.owner = self;
+		newmis.movetype = MOVETYPE_BOUNCE;
+		newmis.solid = SOLID_BBOX;
+		newmis.classname = "clusterbig";
+
+		
+		makevectors (self.v_angle);
+
+		if (self.v_angle_x)
+			newmis.velocity = v_forward*600 + v_up * 200 + crandom()*v_right*10 + crandom()*v_up*10;
+		else
+		{
+			newmis.velocity = aim(self, 10000);
+			newmis.velocity = newmis.velocity * 600;
+			newmis.velocity_z = 200;
+		}
+
+		newmis.avelocity = '300 300 300';
+
+		newmis.angles = vectoangles(newmis.velocity);
+	
+		//newmis.touch = StickyTouch;
+		newmis.touch = ClusterBigTouch;
+
+		newmis.think = SUB_Remove;
+		newmis.nextthink = time + 5;
+
+		FO_SetModel(newmis, "progs/beta1/mcp_pinebig.mdl");
 		if(self.team_no == TEAM_BLUE)
 			newmis.skin = 1;
 		if(self.team_no == TEAM_RED)

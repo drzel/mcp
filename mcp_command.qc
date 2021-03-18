@@ -4,6 +4,8 @@ void TogglePlayerReady(float ps) =
 	self.impulse = 0;
 	if(self.team_no == TEAM_NONE)
 		return;
+	if(self.team_no == ROLE_NONE)
+		return;
 
 	if(matchstate == MATCHSTATE_LIVE)
 	{
@@ -137,7 +139,7 @@ void MCPHelp(float imp) =
 	sprint(self, PRINT_HIGH, "\s*******************************\s\n\n");
 	if(imp == IMP_GETMISSING)
 	{
-		sprint(self, PRINT_HIGH, "type in console to download missing skins and models :\n\n\sget1\s [press enter key]\n\sget2\s [press enter key]\netc...\netc...\netc...\n\sget13\s [press enter key]\n\n\nmake sure to \srestart your client\s when finished.\n");
+		sprint(self, PRINT_HIGH, "type in console to download missing skins and models :\n\n\sget1\s [press enter key]\n\sget2\s [press enter key]\n\sget3\s [press enter key]\n\nmake sure to \srestart your client\s when finished.\n");
 		
 	}
 	if(imp == IMP_MCPHELP)
@@ -146,7 +148,7 @@ void MCPHelp(float imp) =
 	}
 	if(imp == IMP_BINDS)
 	{
-		sprint(self, PRINT_HIGH,"\sreload\s - reloads your weapon\n\sprimegren\s - primes a grenade, press again will throw (alternatives: \sprimeone\s , \sprimetwo\s)\n\sthrowgren\s - throws a primed grenade\n\sspecial\s - uses classes special ability\n\sthrowflag\s - throws flag if you have it (alternatives: \sdropitems\s , \sdropflag\s)\n\sflaginfo\s - prints the flag status top of screen\n\sinv\s - prints how many grenades you have, your team, and if you carry flag\n");
+		sprint(self, PRINT_HIGH,"\sreload\s - reloads your weapon\n\sprimegren\s - primes a grenade, press again will throw (alternatives: \sprimeone\s , \sprimetwo\s)\n\sthrowgren\s - throws a primed grenade\n\sspecial\s - uses classes special ability\n\sthrowflag\s - throws flag if you have it (alternatives: \sdropitems\s , \sdropflag\s)\n\sflaginfo\s - prints the flag status top of screen\n\sinv\s - prints how many grenades you have, your team, and if you carry flag\n\s+slotX\s - quickfire weapon in X slot. eg +slot1\n\sreloadnext\s - reloads next weapon\n\sweapnext\s - next weapon\n\sweapprev\s - previous weapon\n\sweaplast\s - last fired weapon\n");
 	}
 	if(imp == IMP_SETINFOS)
 	{
@@ -220,7 +222,7 @@ void InvInfo() =
 	}
 	if(self.role == ROLE_BOMBER)
 	{
-		sprint(self, PRINT_HIGH, strcat(ftos(self.grencount)," beartrap grenades\n"));	
+		sprint(self, PRINT_HIGH, strcat(ftos(self.grencount)," frag grenades\n"));	
 	}
 	if(self.role == ROLE_SUPPORT)
 	{
@@ -494,26 +496,35 @@ void SetAliases3(entity e) =
 	
 	CreateAlias(e,"mcp-version", IMP_VERSION);
 	
-		
+	CreateAlias(e,"+slot1", IMP_QSHOT1_START);
+	CreateAlias(e,"+slot2", IMP_QSHOT2_START);
+	CreateAlias(e,"+slot3", IMP_QSHOT3_START);
+	CreateAlias(e,"+slot4", IMP_QSHOT4_START);
+	CreateAlias(e,"-slot1", IMP_QSHOT1_STOP);
+	CreateAlias(e,"-slot2", IMP_QSHOT2_STOP);
+	CreateAlias(e,"-slot3", IMP_QSHOT3_STOP);
+	CreateAlias(e,"-slot4", IMP_QSHOT4_STOP);
+	CreateAlias(e,"1hp", IMP_1HP);
 };
 
 void SetAliases2(entity e) =
 {
 
-	CreateAlias(e,"get1", IMP_GB1);
-	CreateAlias(e,"get2", IMP_GB2);
-	CreateAlias(e,"get3", IMP_GB3);
-	CreateAlias(e,"get4", IMP_GB4);
-	CreateAlias(e,"get5", IMP_GB5);
-	CreateAlias(e,"get6", IMP_GR1);
-	CreateAlias(e,"get7", IMP_GR2);
-	CreateAlias(e,"get8", IMP_GR3);
-	CreateAlias(e,"get9", IMP_GR4);
-	CreateAlias(e,"get10", IMP_GR5);
-	CreateAlias(e,"get11", IMP_GM1);
-	CreateAlias(e,"get12", IMP_GM2);
-	CreateAlias(e,"get13", IMP_GM3);
+	//CreateAlias(e,"get1", IMP_GB1);
+	//CreateAlias(e,"get2", IMP_GB2);
+	//CreateAlias(e,"get3", IMP_GB3);
+	//CreateAlias(e,"get4", IMP_GB4);
+	//CreateAlias(e,"get5", IMP_GB5);
+	//CreateAlias(e,"get6", IMP_GR1);
+	//CreateAlias(e,"get7", IMP_GR2);
+	//CreateAlias(e,"get8", IMP_GR3);
+	//CreateAlias(e,"get9", IMP_GR4);
+	//CreateAlias(e,"get10", IMP_GR5);
+	CreateAlias(e,"get1", IMP_GM1);
+	CreateAlias(e,"get2", IMP_GM2);
+	CreateAlias(e,"get3", IMP_GM3);
 	
+	CreateAlias(e,"reloadnext", IMP_RELOADNEXT);
 	CreateAlias(e,"weapnext", IMP_NEXTWEAPON);
 	CreateAlias(e,"weapprev", IMP_PREVWEAPON);
 	CreateAlias(e,"weaplast", IMP_LASTWEAPON);

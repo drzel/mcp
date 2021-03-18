@@ -32,7 +32,6 @@ void() IntermissionThink =
 
 void() PlayerDeathThink =
 {
-
 	local entity    old_self;
 	local float             forward;
 	
@@ -45,7 +44,7 @@ void() PlayerDeathThink =
 		else    
 			self.velocity = forward * normalize(self.velocity);
 	}
-	
+	//bprint(2,"zzzzapdeath\n");
 	MenuInputImpulses();
 	DeadOrAliveImpulses();
 
@@ -64,7 +63,7 @@ void() PlayerDeathThink =
 
 
 // wait for any button down
-	if (!self.button2 && !self.button1 && !self.button0)
+	if (!self.button2 && !self.button1 && !self.button0 && !isQuickShotting())
 		return;
 
 	self.button0 = 0;
@@ -129,7 +128,9 @@ void() PlayerPreThink =
 	}
 	
 	if (self.deadflag == DEAD_DYING)
+	{
 		return; // dying, so do nothing
+	}
 
 	if (self.button2)
 	{
@@ -168,7 +169,7 @@ void() PlayerPostThink =
 		return;         // intermission or finale
 	if (self.deadflag)
 		return;
-
+	//bprint(2,strcat(ftos(self.v_angle_x),"dirgg\n"));
 // check to see if player landed and play landing sound 
 	if ((self.jump_flag < -20) && (self.flags & FL_ONGROUND) )
 	{

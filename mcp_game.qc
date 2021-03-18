@@ -59,15 +59,18 @@ void sprite_touch() =
 			l1 = "\n\s[\sfighter\s]\s\n";
 			l2 = "\sweapon :\s (rocketlauncher) - 4 shots in clip, good for bouncing players\n";
 			l3 = "\sgrenade:\s (frag) - high damage grenade\n";
-			l4 = "\sspecial:\s (harpoon) - pull enemies towards you\n";
+			l4 = "\sspecial:\s (harpoon) - pull enemies towards you, hit a direct rocket shortly after for extra damage\n";
 			l5 = "\spassive:\s (armour regen) -  slowly regens health whilst out of combat\n";	
 		}
 		else if(self.team_no == ROLE_BOMBER)
 		{
 			l1 = "\n\s[\sbomber\s]\s\n";
-			l2 = "\sweapon :\s (stickylauncher) - explode on contact with enemy or detonated when 'special' is pressed\n";
-			l3 = "\sgrenade:\s (beartrap) - does significant damage to enemies who step on it, can be shot and destroyed\n";
-			l4 = "\sspecial:\s (detonate) - explodes any stickys you have\n";
+			//l2 = "\sweapon :\s (stickylauncher) - explode on contact with enemy or detonated when 'special' is pressed\n";
+			//l3 = "\sgrenade:\s (beartrap) - does significant damage to enemies who step on it, can be shot and destroyed\n";
+			//l4 = "\sspecial:\s (detonate) - explodes any stickys you have\n";
+			l2 = "\sweapon :\s (grenlauncher) - shoots a grenade that splits into smaller grenades\n";
+			l3 = "\sgrenade:\s (frag) - high damage grenade\n";
+			l4 = "\sspecial:\s (detpack) - press once to throw a detpack, again to detonate detpack\n";
 			l5 = "\spassive:\s (health and armour regen) -  slowly regens health and armour\n";
 				
 		}
@@ -340,18 +343,63 @@ void mcpflag_loose() =
 	if(time > self.cnt)
 		{
 			ChangeMCPFlagState(MCPFLAGSTATE_RESET, gm);
+			return;
 		}
+	local float pos = pointcontents(self.origin);
+	if(pos == CONTENT_SKY || pos == CONTENT_LAVA)
+	{
+		self.cnt = time;
+	}
+};
+
+void flagtrail_touch() =
+{
+	if(other.classname == "player")
+	{
+		if(other.team_no != self.team_no)
+		{
+			if(time >= mcpflag.heat)
+			{
+				FO_Sound(self, CHAN_ITEM, "beta1/pacman.wav", 1, ATTN_NORM);
+				mcpflag.heat = time + 0.35;
+			}
+			if(other.health < 99)
+				other.health = other.health + 1;
+			remove(self);
+		}
+	}
+};
+
+void SpawnFlagTrail() =
+{
+	local entity trail = spawn();
+	FO_SetModel(trail, "progs/beta1/mcp_flagtrail.spr");
+	setorigin (trail,mcpflag.owner.origin);
+	trail.movetype = MOVETYPE_NONE;
+	trail.solid = SOLID_TRIGGER;
+	
+	trail.nextthink = time + 2;
+	trail.think = SUB_Remove;
+	trail.touch = flagtrail_touch;
+	trail.classname = "flagtrail";
+	trail.team_no = mcpflag.owner.team_no;
+	if(trail.team_no == TEAM_BLUE)
+		trail.frame = 1;
+	else
+		trail.frame = 2;
+	setsize (trail, '-8 -8 -8', '8 8 8');
+	
+
 };
 
 void mcpflag_carried()=
 {
-	self.nextthink = time + 0.1;
+	self.nextthink = time + 0.15;
 	
 	if(self.owner.ismoving == 0)
 		return;
 
-	//particle(self.owner.origin, '0 0 0', 288, 32);
-	//multicast(
+	SpawnFlagTrail();
 };
 
 

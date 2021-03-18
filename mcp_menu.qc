@@ -12,6 +12,7 @@ void() MenuThink =
 	}
 	
 	centerprint(self.owner, MenuString(self.owner.menu));
+
 };
 
 void(float imp) MenuInput = 
@@ -25,6 +26,7 @@ void(float imp) MenuInput =
 	
 	if(self.menu == MENU_SELECTTEAM)
 	{
+
 		if(imp == 1)
 		{
 			if(self.team_no == TEAM_BLUE)
@@ -35,14 +37,7 @@ void(float imp) MenuInput =
 			}
 			else
 			{	
-				if(self.deadflag == DEAD_NO)
-					ClientKill();
-				self.team_no = TEAM_BLUE;
-				bprint(2, strcat(self.netname, " has joined the \sblue\s team.\n"));
-				self.role = ROLE_NONE;
-				self.nextrole = ROLE_NONE;
-				SetTeamFragsColourName();
-				ShowMenu(MENU_SELECTROLE);
+				JoinTeam(TEAM_BLUE);
 				return;
 			}
 		}
@@ -56,14 +51,7 @@ void(float imp) MenuInput =
 			}
 			else
 			{
-				if(self.deadflag == DEAD_NO)
-					ClientKill();
-				self.team_no = TEAM_RED;
-				bprint(2, strcat(self.netname, " has joined the \sred\s team.\n"));
-				self.role = ROLE_NONE;
-				self.nextrole = ROLE_NONE;
-				SetTeamFragsColourName();
-				ShowMenu(MENU_SELECTROLE);
+				JoinTeam(TEAM_RED);
 				return;
 			}
 		}
@@ -71,19 +59,17 @@ void(float imp) MenuInput =
 		{
 			if(self.team_no == TEAM_RED || self.team_no == TEAM_BLUE)
 				return;
-			self.team_no = AutoPickTeam();
-			if(self.team_no == TEAM_BLUE)
+			local float rngteam = AutoPickTeam();
+			if(rngteam == TEAM_BLUE)
 			{
 				bprint(2, strcat(self.netname, " was automagically put on the \sblue\s team.\n"));
+				JoinTeam(TEAM_BLUE);
 			}
-			if(self.team_no == TEAM_RED)
+			if(rngteam == TEAM_RED)
 			{
 				bprint(2, strcat(self.netname, " was automagically put on the \sred\s team.\n"));
+				JoinTeam(TEAM_RED);
 			}
-			self.role = ROLE_NONE;
-			self.nextrole = ROLE_NONE;
-			SetTeamFragsColourName();
-			ShowMenu(MENU_SELECTROLE);
 			return;
 			
 		}
@@ -418,23 +404,25 @@ float AutoPickTeam()
 void JoinTeam(float t) =
 {
 	self.impulse = 0;
-	
+		
 	if(t == self.team_no)
 	{
 		sprint(self, PRINT_HIGH, "you are already on that team.\n");
 		stuffcmd(self, "play beta1/error.wav\n");
 		return;
-		
 	}
-	if(self.deadflag == DEAD_NO)
-		ClientKill();
-		
+	if(self.model != "")
+	{
+		//setmodel(self,string_null);
+		stuffcmd(self,"kill\n");
+	}
 	if(t == TEAM_BLUE)
 	{
 		self.team_no = TEAM_BLUE;
 		bprint(2, strcat(self.netname, " has joined the \sblue\s team.\n"));
 		self.role = ROLE_NONE;
 		self.nextrole = ROLE_NONE;
+
 		SetTeamFragsColourName();
 		ShowMenu(MENU_SELECTROLE);
 		return;
@@ -446,6 +434,7 @@ void JoinTeam(float t) =
 		bprint(2, strcat(self.netname, " has joined the \sred\s team.\n"));
 		self.role = ROLE_NONE;
 		self.nextrole = ROLE_NONE;
+
 		SetTeamFragsColourName();
 		ShowMenu(MENU_SELECTROLE);
 		return;

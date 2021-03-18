@@ -21,7 +21,8 @@ void ThrownGrenade_Think() = {
 		}
 		else if(self.role == ROLE_BOMBER)
 		{
-			self.think = ExplodeBearTrap;
+			//self.think = ExplodeBearTrap;
+			self.think = ExplodeFragGrenade;
 		}
 		else if(self.role == ROLE_RECON)
 		{
@@ -123,9 +124,12 @@ void ThrowGrenade() = {
 	if(self.role == ROLE_BOMBER)
 	{
 
-		newmis.avelocity = '0 300 0';
-		newmis.angles = '0 0 0';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_beartrap_shut.mdl");
+		newmis.avelocity = '300 300 300';
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl");
+		
+		//newmis.avelocity = '0 300 0';
+		//newmis.angles = '0 0 0';
+		//FO_SetModel(newmis, "progs/beta1/mcp_gren_beartrap_shut.mdl");
 		if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
@@ -181,7 +185,7 @@ void () ExplodeFragGrenade = {
 };
 
 void () ExplodeLeechGrenade = {
-    T_RadiusDamage(self, self.owner, 100, world,"grenade_leech");
+    T_RadiusDamage(self, self.owner, 180, world,"grenade_leech");
     ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
     
@@ -393,13 +397,16 @@ void () StickyGrenade = {
 	}
 	if(self.role == ROLE_BOMBER)
 	{
-		bprint(PRINT_MEDIUM, strcat("Ack! ", self.owner.netname,"! you're meant to trap the enemy!\n"));	
-	
-	
-		newmis.think = ExplodeBearTrap;
-		newmis.angles = '0 0 0';
-		newmis.avelocity = '0 300 0';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_beartrap_shut.mdl");
+		//bprint(PRINT_MEDIUM, strcat("Ack! ", self.owner.netname,"! you're meant to trap the enemy!\n"));	
+		//newmis.think = ExplodeBearTrap;
+		//newmis.angles = '0 0 0';
+		//newmis.avelocity = '0 300 0';
+		//FO_SetModel(newmis, "progs/beta1/mcp_gren_beartrap_shut.mdl");
+		
+		bprint(PRINT_MEDIUM, strcat("Ummm, ", self.owner.netname,", you're supposed to THROW the grenade!\n"));	
+		newmis.think = ExplodeFragGrenade;
+		newmis.avelocity = '300 300 300';
+		
 		if(self.owner.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
@@ -790,7 +797,8 @@ void PrimeGrenade() = {
 	}
 	if(self.role == ROLE_BOMBER)
 	{
-		sprint(self, PRINT_HIGH, "priming beartrap grenade...\n");		
+		//sprint(self, PRINT_HIGH, "priming beartrap grenade...\n");	
+		sprint(self, PRINT_HIGH, "priming frag grenade...\n");		
 	}
 	if(self.role == ROLE_SUPPORT)
 	{

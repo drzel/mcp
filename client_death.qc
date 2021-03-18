@@ -11,13 +11,10 @@ void() respawn =
 
 void() ClientKill =
 {
-	if(self.role == ROLE_NONE)
-		return;
-
 
 	if(self.deadflag)
 		return;
-	SetNextRespawn(self, 1);
+
 	
 	if(matchstate == MATCHSTATE_LIVE)
 	{
@@ -25,12 +22,14 @@ void() ClientKill =
 		bprint (PRINT_MEDIUM, " suicides\n");
 	}
 	set_suicide_frame ();
-	self.health = 0;
+	self.health = -1;
 	self.modelindex = modelindex_player;
 	self.movetype = MOVETYPE_NONE;
 	
 	//logfrag (self, self);
 	//self.frags = self.frags - 1;    // extra penalty
+	
 	self.th_die ();
 	//respawn ();
+	SetNextRespawn(self, 1);
 };

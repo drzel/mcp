@@ -99,7 +99,7 @@ void()	player_stand1 =[	$axstnd1,	player_stand1	]
 		return;
 	}
 
-	if (self.weapon == WPN_AXE)
+	if (VisualWeapon() == WPN_AXE)
 	{
 		if (self.walkframe >= 12)
 			self.walkframe = 0;
@@ -124,7 +124,7 @@ void()	player_run =[	$rockrun1,	player_run	]
 		return;
 	}
 
-	if (self.weapon == WPN_AXE)
+	if (VisualWeapon() == WPN_AXE)
 	{
 		if (self.walkframe == 6)
 			self.walkframe = 0;
@@ -179,44 +179,77 @@ void() player_nail1   =[$nailatt1, player_nail2  ]
 {
 	//self.effects = self.effects | EF_MUZZLEFLASH;
 	muzzleflash();
-	if (!self.button0)
-		{player_run ();return;}
-	self.weaponframe = self.weaponframe + 1;
-	if (self.weaponframe == 9)
-		self.weaponframe = 1;
-	//SuperDamageSound();
-	//W_FireSpikes (4);
-	SpawnNail ();
-	self.attack_finished = time + 0.2;
-	self.clip_curr_primary = self.clip_curr_primary - 1;
-	W_SetCurrentAmmo();
-	if(self.clip_curr_primary == 0)
-	{
-		player_run ();
-		ReloadWeapon();
+	if(self.qsweapon == WPN_NONE)
+	{	
+		if(self.weapon != WPN_NAILGUN || !self.button0)
+		{
+			player_run();
+			return;
+		}
 	}
+	else
+	{
+		if(self.qsweapon != WPN_NAILGUN)
+		{
+			player_run();
+			return;
+		}
+	}
+
+		self.attack_finished = time + 0.2;
+		self.weaponframe = self.weaponframe + 1;
+		if (self.weaponframe == 9)
+			self.weaponframe = 1;
+		//SuperDamageSound();
+		//W_FireSpikes (4);
+		SpawnNail ();
+		
+		self.clip_curr_primary = self.clip_curr_primary - 1;
+		ChangeHudAmmo(self,WPN_NAILGUN);
+		if(self.clip_curr_primary == 0)
+		{
+			player_run ();
+			ReloadWeapon(WPN_NAILGUN);
+		}
+
 };
 void() player_nail2   =[$nailatt2, player_nail1  ]
 {
 	//self.effects = self.effects | EF_MUZZLEFLASH;
 	muzzleflash();
-
-	if (!self.button0)
-		{player_run ();return;}
-	self.weaponframe = self.weaponframe + 1;
-	if (self.weaponframe == 9)
-		self.weaponframe = 1;
-	//SuperDamageSound();
-	//W_FireSpikes (-4);
-	SpawnNail();
-	self.attack_finished = time + 0.2;
-	self.clip_curr_primary = self.clip_curr_primary - 1;
-	W_SetCurrentAmmo();
-	if(self.clip_curr_primary == 0)
-	{
-		player_run ();
-		ReloadWeapon();
+	if(self.qsweapon == WPN_NONE)
+	{	
+		if(self.weapon != WPN_NAILGUN || !self.button0)
+		{
+			player_run();
+			return;
+		}
 	}
+	else
+	{
+		if(self.qsweapon != WPN_NAILGUN)
+		{
+			player_run();
+			return;
+		}
+	}
+
+		self.attack_finished = time + 0.2;
+		self.weaponframe = self.weaponframe + 1;
+		if (self.weaponframe == 9)
+			self.weaponframe = 1;
+		//SuperDamageSound();
+		//W_FireSpikes (-4);
+		SpawnNail();
+	
+		self.clip_curr_primary = self.clip_curr_primary - 1;
+		ChangeHudAmmo(self,WPN_NAILGUN);
+		if(self.clip_curr_primary == 0)
+		{
+			player_run ();
+			ReloadWeapon(WPN_NAILGUN);
+		}
+
 };
 
 //============================================================================
@@ -225,8 +258,22 @@ void() player_light1   =[$light1, player_light2  ]
 {
 	//self.effects = self.effects | EF_MUZZLEFLASH;
 	muzzleflash();
-	if (!self.button0)
-		{player_run ();return;}
+	if(self.qsweapon == WPN_NONE)
+	{	
+		if(self.weapon != WPN_SHAFT || !self.button0)
+		{
+			player_run();
+			return;
+		}
+	}
+	else
+	{
+		if(self.qsweapon != WPN_SHAFT)
+		{
+			player_run();
+			return;
+		}
+	}
 	self.weaponframe = self.weaponframe + 1;
 	if (self.weaponframe == 5)
 		self.weaponframe = 1;
@@ -234,19 +281,33 @@ void() player_light1   =[$light1, player_light2  ]
 	W_FireLightning2();
 	self.attack_finished = time + 0.2;
 	self.clip_curr_primary = self.clip_curr_primary - 1;
-	W_SetCurrentAmmo();
+	ChangeHudAmmo(self,WPN_SHAFT);
 	if(self.clip_curr_primary == 0)
 	{
 		player_run ();
-		ReloadWeapon();
+		ReloadWeapon(WPN_SHAFT);
 	}
 };
 void() player_light2   =[$light2, player_light1  ]
 {
 	//self.effects = self.effects | EF_MUZZLEFLASH;
 	muzzleflash();
-	if (!self.button0)
-		{player_run ();return;}
+	if(self.qsweapon == WPN_NONE)
+	{	
+		if(self.weapon != WPN_SHAFT || !self.button0)
+		{
+			player_run();
+			return;
+		}
+	}
+	else
+	{
+		if(self.qsweapon != WPN_SHAFT)
+		{
+			player_run();
+			return;
+		}
+	}
 	self.weaponframe = self.weaponframe + 1;
 	if (self.weaponframe == 5)
 		self.weaponframe = 1;
@@ -254,11 +315,11 @@ void() player_light2   =[$light2, player_light1  ]
 	W_FireLightning2();
 	self.attack_finished = time + 0.2;
 	self.clip_curr_primary = self.clip_curr_primary - 1;
-	W_SetCurrentAmmo();
+	ChangeHudAmmo(self,WPN_SHAFT);
 	if(self.clip_curr_primary == 0)
 	{
 		player_run ();
-		ReloadWeapon();
+		ReloadWeapon(WPN_SHAFT);
 	}
 };
 
@@ -378,7 +439,7 @@ void() player_pain =
 	if (self.invisible_finished > time)
 		return;		// eyes don't have pain frames
 
-	if (self.weapon == WPN_AXE)
+	if (VisualWeapon() == WPN_AXE)
 		player_axpain1 ();
 	else
 		player_pain1 ();
@@ -577,7 +638,6 @@ void() PlayerDie =
 	DropHealthPack();
 	ClearPlayerState();
 	
-	self.weaponmodel="";
 	self.view_ofs = '0 0 -8';
 	self.deadflag = DEAD_DYING;
 	self.solid = SOLID_NOT;
@@ -597,12 +657,13 @@ void() PlayerDie =
 	self.angles_x = 0;
 	self.angles_z = 0;
 	
-	if (self.weapon == WPN_AXE)
+	if (VisualWeapon() == WPN_AXE || self.deathtype == "falling")
 	{
 		player_die_ax1 ();
 		return;
 	}
-	
+	self.weaponmodel="";
+
 	i = cvar("temp1");
 	if (!i)
 		i = 1 + floor(random()*6);
@@ -622,15 +683,15 @@ void() PlayerDie =
 
 void() set_suicide_frame =
 {	// used by klill command and diconnect command
-	if (self.model != "progs/player.mdl")
+	if (self.model != "progs/beta1/mcp_player.mdl")
+	{
+		bprint(2,"zzzz\n");
 		return;	// allready gibbed
-	FO_SetModel(self, string_null);
+	}
+	setmodel(self, string_null);
 	setsize(self, VEC_HULL_MIN, VEC_HULL_MAX);
 	self.frame = $deatha11;
-	//self.solid = SOLID_NOT;
-	//self.movetype = MOVETYPE_TOSS; 
-	//self.deadflag = DEAD_DEAD;
-	//self.nextthink = -1;
+
 };
 
 

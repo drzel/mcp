@@ -169,7 +169,7 @@ void() InitBodyQue =
 void(entity ent) CopyToBodyQue =
 {
 	bodyque_head.angles = ent.angles;
-	FO_SetModel(bodyque_head, "progs/player.mdl");
+	FO_SetModel(bodyque_head, "progs/beta1/mcp_player.mdl");
 	//bodyque_head.model = ent.model;
 	bodyque_head.skin = ent.skin;
 	bodyque_head.modelindex = ent.modelindex;

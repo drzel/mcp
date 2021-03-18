@@ -267,6 +267,7 @@ void zPreCache() =
 	precache_model ("progs/s_spike.mdl");
 
 	precache_model ("progs/backpack.mdl");
+	precache_model ("progs/armor.mdl");
 
 	precache_model ("progs/zom_gib.mdl");
 
@@ -278,6 +279,9 @@ void zPreCache() =
 	//MODELS
 
 	//misc
+	
+	precache_model ("progs/beta1/mcp_player.mdl");
+
 	precache_model("progs/beta1/mcp_flag.mdl");
 	precache_model("progs/beta1/mcp_armourshard.mdl");
 	precache_model("progs/beta1/mcp_healthpack.mdl");
@@ -285,9 +289,15 @@ void zPreCache() =
 	//projectiles
 	precache_model("progs/beta1/mcp_missile.mdl");
 	precache_model("progs/beta1/mcp_nail.mdl");
+	
 	precache_model("progs/beta1/mcp_sticky.mdl");
+	precache_model("progs/beta1/mcp_pinebig.mdl");
+	precache_model("progs/beta1/mcp_pinesmall.mdl");
+	precache_model("progs/beta1/mcp_c4.mdl");
+	
 	precache_model("progs/beta1/mcp_teleball.mdl");
 	precache_model("progs/beta1/mcp_harpoon.mdl");
+
 
 	precache_model("progs/beta1/mcp_gren_flash.mdl");
 	precache_model("progs/beta1/mcp_gren_frag.mdl");
@@ -320,6 +330,7 @@ void zPreCache() =
 	
 	//sprites
 	precache_model("progs/beta1/s_mcp.spr");
+	precache_model("progs/beta1/mcp_flagtrail.spr");
 	
 	//SOUND
 	
@@ -343,7 +354,7 @@ void zPreCache() =
 	precache_sound("beta1/voice_yousuck.wav");
 	precache_sound("beta1/voice_bluescores.wav");
 	precache_sound("beta1/voice_redscores.wav");
-	
+	precache_sound("beta1/voice_combowhore.wav");
 	precache_sound("beta1/voice_killingspree.wav");
 	precache_sound("beta1/voice_dominating.wav");
 	precache_sound("beta1/voice_megakill.wav");
@@ -353,11 +364,12 @@ void zPreCache() =
 	precache_sound("beta1/voice_godlike.wav");
 	precache_sound("beta1/voice_holyshit.wav");
 	
-	
 	precache_sound("beta1/humiliation.wav");
 	precache_sound("beta1/toasty.wav");
 	precache_sound("beta1/gbuster.wav");
 	precache_sound("beta1/pancake.wav");
+	
+	precache_sound("beta1/pacman.wav");
 	
 	precache_sound("beta1/buzzer.wav");
 	precache_sound("beta1/scoretick_team.wav");
@@ -434,6 +446,12 @@ void zPreCache() =
 	precache_sound("beta1/harpoon_enemy1.wav");
 	precache_sound("beta1/harpoon_enemy2.wav");
 	precache_sound("beta1/harpoon_throw.wav");
+	precache_sound("beta1/harpoon_hitmeat.wav");
+	
+	precache_sound("beta1/c4_throw.wav");
+	precache_sound("beta1/c4_detonate.wav");
+	precache_sound("beta1/c4_explode.wav");
+	precache_sound("beta1/c4_armed.wav");
 	
 	//grentimers
 	precache_sound("beta1/mcp_grentimer1.wav");

@@ -44,7 +44,7 @@ void Cloak_Think()=
 	if(self.bubble_count >= SPECIAL_DURATION_ASSASSIN)
 	{
 		self.owner.cloak_complete = 1;
-		FO_SetModel(self.owner, "progs/player.mdl");
+		FO_SetModel(self.owner, "progs/beta1/mcp_player.mdl");
 		setsize (self.owner, VEC_HULL_MIN, VEC_HULL_MAX);
 		FO_Sound(self.owner, CHAN_ITEM, "beta1/uncloak.wav", 1, ATTN_NORM);
 		sprint(self.owner, PRINT_HIGH, "cloak removed.\n");
@@ -105,8 +105,28 @@ void Cloak() =
 	WriteCoord (MSG_MULTICAST, self.origin_z);
 	multicast (self.origin, MULTICAST_PHS);
 	
-	W_SetCurrentWeaponModel();
-	W_SetCurrentAmmo();
+	ChangeWeaponModel(self.weapon);
+	ChangeHudAmmo(self,self.weapon);
+};
+
+void teleball_touch() =
+{
+	if(other.classname != "worldspawn")
+		return;
+	if(time < self.cnt)
+		return;
+	self.cnt = time + 0.2;
+	local float rng = MyRNG(2);
+		
+	if (rng == 1)
+	{
+		FO_Sound(self, CHAN_ITEM, "beta1/teleball_idle.wav", 1, ATTN_NORM);
+	}
+	else
+	{
+		FO_Sound(self, CHAN_ITEM, "beta1/teleball_idle2.wav", 1, ATTN_NORM);
+	}
+		
 };
 
 void TeleBall_Think() =
@@ -160,13 +180,16 @@ void SpawnTeleBall() =
 	newmis.nextthink = time + 0.1;
 	newmis.think = TeleBall_Think;
 	newmis.classname = "teleball";
+	newmis.touch = teleball_touch;
 
 	FO_SetModel (newmis, "progs/beta1/mcp_teleball.mdl");
 	if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 	if(self.team_no == TEAM_RED)
 		newmis.skin = 2;
-	setsize(newmis, self.mins, self.maxs);             
+	//setsize(newmis, self.mins, self.maxs);
+	setsize (newmis, '-8 -8 -8', '8 8 8');
+	//setsize (newmis, '-4 -4 -4', '4 4 4');                
 	//setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
 	setorigin (newmis, self.origin + '0 0 16');
 	FO_Sound(newmis, CHAN_ITEM, "beta1/teleball_start.wav", 1, ATTN_NORM);
@@ -229,6 +252,42 @@ float CheckArea (entity obj, entity builder) = {
     return (1);
 };
 
+float IsTeleBlocked(entity tb) =
+{
+	local float blockages = 0;
+	
+	//c
+	traceline(tb.origin + '0 0 -34', tb.origin + '0 0 34', FALSE, tb);
+	if (trace_fraction != 1 && !trace_ent.takedamage)
+		blockages = 1;
+	
+	//fr
+	traceline(tb.origin + '18 18 -34', tb.origin + '18 18 34', FALSE, tb);
+	if (trace_fraction != 1 && !trace_ent.takedamage)
+		blockages = 1;
+	
+	//br
+	traceline(tb.origin + '18 -18 -34', tb.origin + '18 -18 34', FALSE, tb);
+	if (trace_fraction != 1 && !trace_ent.takedamage)
+		blockages = 1;
+	
+	//fl	
+	traceline(tb.origin + '-18 18 -34', tb.origin + '-18 18 34', FALSE, tb);
+	if (trace_fraction != 1 && !trace_ent.takedamage)
+		blockages = 1;
+		
+	//bl	
+	traceline(tb.origin + '-18 -18 -34', tb.origin + '-18 -18 34', FALSE, tb);
+	if (trace_fraction != 1 && !trace_ent.takedamage)
+		blockages = 1;
+
+
+		
+	return blockages;
+
+	
+};
+
 void Teleport2Ball () =
 {
 	local entity tb = world;
@@ -243,15 +302,32 @@ void Teleport2Ball () =
 	}
 	if(tb == world)
 		return;
-	//if (tb.bubble_count == -1)
-	//{
-	//	sprint(self, PRINT_HIGH, "not enough room to teleport.\n");
-	//	return;
-	//}
-	spawn_tfog(self.origin);
+
 	
+	tracebox(tb.origin + '0 0 -32', VEC_HULL_MIN, VEC_HULL_MAX, tb.origin + '0 0 32', FALSE, tb);
+	if (trace_fraction != 1)
+	{
+		if (trace_ent.classname == "worldspawn")
+		{
+			sprint(self, PRINT_HIGH, "teleport obstructed.\n");
+			stuffcmd(self, "play beta1/error.wav\n");
+			return;
+		}
+	}
+	/*if(IsTeleBlocked(tb))
+	{
+		sprint(self, PRINT_HIGH, "teleport obstructed.\n");
+		stuffcmd(self, "play beta1/error.wav\n");
+		return;
+	}*/
+	
+	spawn_tfog(self.origin);
 	spawn_tfog(tb.origin + 32 * v_forward);
 	spawn_tdeath (tb.origin, self);
+
+	
+	
+	//tracebox (self.origin, VEC_HULL_MIN, VEC_HULL_MAX, self.origin + '0 0 16', FALSE, self); 
 	setorigin(self, tb.origin);
 	remove(tb);
 };
@@ -388,14 +464,10 @@ void DropArmour() =
 	newmis.angles = vectoangles(newmis.velocity);
 };
 
-
 void HarpoonTouch() =
 {
 	if (other == self.owner)
 		return;
-
-
-
 
 	if (other.solid == SOLID_TRIGGER)
 		return; // trigger field, do nothing
@@ -405,13 +477,17 @@ void HarpoonTouch() =
 		remove(self);
 		return;
 	}
-	
-	//DetLittleProxyInRadius (self.origin, 32, self, self.owner.team_no);
+
 // hit something that bleeds
 	if (other.takedamage)
 	{
 		spawn_touchblood (18);
 		other.deathtype = "harpoon";
+		FO_Sound(self,CHAN_WEAPON, "beta1/harpoon_hitmeat.wav", 1, ATTN_NORM);
+		SpawnMeatSpray(self.origin, '30 -30 10');
+		SpawnMeatSpray(self.origin, '-30 30 10');
+		SpawnMeatSpray(self.origin, '30 30 10');
+		
 		T_Damage (other, self, self.owner, HARPOON_DAMAGE);
 		self.velocity = '0 0 0';
 		self.touch = SUB_Null;
@@ -432,6 +508,7 @@ void HarpoonTouch() =
 	}
 	else
 	{
+		
 		WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 		WriteByte (MSG_MULTICAST, TE_SUPERSPIKE);
 		WriteCoord (MSG_MULTICAST, self.origin_x);
@@ -446,11 +523,14 @@ void HarpoonTouch() =
 	}
 	
 };
-void HarpoonToward(entity targ, entity attacker) =
+
+
+
+void HarpoonTowardOld(entity targ, entity inflictor, entity attacker) =
 {
 	if(targ.classname != "player")
 		return;
-		
+	
 	if ( (attacker != world) && (targ.movetype == MOVETYPE_WALK) )
 	{
 		
@@ -483,12 +563,66 @@ void HarpoonToward(entity targ, entity attacker) =
 
 		targ.velocity = targ.velocity + dir * kb * 8;
 	}
+
+};
+void harpoonremove() =
+{
+	remove(self);
+};
+void HarpoonToward(entity targ, entity inflictor, entity attacker) =
+{
+	
+		if(targ.classname != "player")
+		return;
+		if ( (attacker != world) && (targ.movetype == MOVETYPE_WALK) )
+		{
+
+			local float mindistance = 100;
+			local float maxdistance = 800;
+			local vector difference = targ.origin - attacker.origin;
+			local float distance = rint(sqrt(pow(difference.x, 2) + pow(difference.y, 2) + pow(difference.z, 2)));
+			if(distance < mindistance)
+				distance = mindistance;
+			if (distance > maxdistance)
+				distance = maxdistance;
+			distance = distance - mindistance;
+			
+			local float kb;
+			local float maxkb = 900;
+			local float minkb = 500;
+			local float kbrange = maxdistance-mindistance;
+			kb = maxkb * (distance/kbrange);
+			kb = rint(kb);
+			if(kb < minkb)
+				kb = minkb;
+	
+			//local vector offset = '0 0 0';
+			//local float zoff =
+			//offset_z = zoff;
+			local vector midpoint = ((targ.origin + attacker.origin) / 2) + '0 0 128';
+
+			
+			local vector dir = targ.origin - midpoint;
+			dir = normalize(dir) * -1;
+			//bprint(2,strcat(ftos(kb),"kb ", ftos(distance/kbrange),"perc\n"));
+			targ.velocity = dir * kb;
+			targ.velocity_z = kb;
+			
+			local entity harpoontimer = spawn();
+			harpoontimer.classname = "harpoontimer";
+			harpoontimer.owner = targ;
+			harpoontimer.gren = attacker; //using this to track attacker
+			harpoontimer.think = harpoonremove;
+			harpoontimer.nextthink = time + HARPOON_QUADWINDOW;
+			
+			remove(self);
+		}
+	
 };
 
 void LinkThink() =
 {
 	self.nextthink = time + 0.01;
-	//bprint(2,strcat(self.gren.classname, "zzzf\n"));
 	if(self.gren.classname != "harpoon" || self.gren.movetype == MOVETYPE_TOSS)
 	{
 		self.movetype = MOVETYPE_BOUNCE;
@@ -572,6 +706,145 @@ void ThrowHarpoon() =
 	
 };
 
+
+void C4_Explode() =
+{
+	if (self.voided) 
+	{
+		return;
+	}
+	self.voided = 1;
+
+	T_RadiusDamage (self, self.owner, C4DAMAGE_EXPLODE, world, "c4");
+	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+	FO_Sound(self, CHAN_ITEM, "beta1/c4_explode.wav", 1, ATTN_NORM);
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+
+	remove (self);
+};
+
+void C4_Fizzle() =
+{
+	sprint(self.owner, PRINT_HIGH, "your detpack fizzled.\n");
+	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
+	WriteCoord (MSG_MULTICAST, self.origin_x);
+	WriteCoord (MSG_MULTICAST, self.origin_y);
+	WriteCoord (MSG_MULTICAST, self.origin_z);
+	multicast (self.origin, MULTICAST_PHS);
+	remove(self);
+};
+
+void C4_AirTouch() =
+{
+	if(other.classname == "worldspawn" || other.classname == "player")
+	{
+		if(other == self.owner)
+			return;
+		self.velocity = '0 0 0';
+		
+		self.movetype = MOVETYPE_BOUNCE;
+		self.touch = SUB_Null;
+	}
+};
+
+void C4_Arm() =
+{
+	self.think = C4_Fizzle;
+	self.nextthink = time + 500;
+	FO_Sound(self, CHAN_ITEM, "beta1/c4_armed.wav", 1, ATTN_NORM);
+	stuffcmd(self.owner, "play beta1/c4_armed.wav\n");
+};
+
+void ThrowC4() =
+{
+	if(self.ammo_cells < 100)
+	{
+		sprint(self, PRINT_HIGH, "insufficient cells, 100 needed.\n");
+		stuffcmd(self, "play beta1/error.wav\n");
+		return;
+	}
+	
+	FO_Sound(self, CHAN_ITEM, "beta1/c4_throw.wav", 1, ATTN_NORM);
+	self.ammo_cells = 50;
+		
+	newmis = spawn();
+	newmis.movetype = MOVETYPE_TOSS;
+	newmis.classname = "c4";
+	newmis.solid = SOLID_BBOX;
+	newmis.owner = self;
+	
+	newmis.team_no = self.team_no;
+
+	newmis.nextthink = time + 1;
+	newmis.think = C4_Arm;
+	newmis.touch = C4_AirTouch;
+	setorigin(newmis, self.origin);
+	setsize(newmis, '-16 -16 0', '16 16 8');
+
+	
+	FO_SetModel(newmis, "progs/beta1/mcp_c4.mdl");
+	if(self.team_no == TEAM_BLUE)
+		newmis.skin = 1;
+	else
+		newmis.skin = 2;
+	
+    
+	if (self.v_angle_x) 
+	{
+		newmis.velocity = v_forward * 600 + v_up * 200 + crandom() * v_right * 10 + crandom() * v_up * 10;
+	}
+	else 
+	{
+		newmis.velocity = aim(self, 10000);
+		newmis.velocity = newmis.velocity * 300;
+		newmis.velocity_z = 200;
+	}
+	//newmis.angles = vectoangles(newmis.velocity);
+	newmis.avelocity = '0 300 0';
+	newmis.angles = '90 0 0';
+};
+
+void C4Skill() =
+{
+	local entity c4e = world;
+	local entity te = find(world, classname, "c4");
+	while (te) 
+	{
+		if (te.owner == self && te != world) 
+		{
+			c4e = te;
+		}
+		te = find(te, classname, "c4");
+	}
+	
+	if(c4e == world)
+	{
+		ThrowC4();
+	}
+	else
+	{
+		if(time > c4e.bubble_count)
+		{
+			stuffcmd(self, "play beta1/c4_detonate.wav\n");
+			c4e.think = C4_Explode;
+			c4e.nextthink = time;
+			return;
+		}
+		else
+		{
+			stuffcmd(self, "play beta1/error.wav\n");
+			sprint(self, PRINT_HIGH, "you cant detonate it yet.\n");
+			return;
+		}
+	}
+};
+
 void W_SpecialSkill() =
 {
 	self.impulse = 0;
@@ -589,10 +862,12 @@ void W_SpecialSkill() =
 	{
 		//DropArmour();
 		ThrowHarpoon();
+		//LaunchHook();
 	}
 	if(self.role == ROLE_BOMBER)
 	{
-		DetStickys();
+		//DetStickys();
+		C4Skill();
 	}
 	if(self.role == ROLE_SUPPORT)
 	{
@@ -694,12 +969,22 @@ void RegenCells() =
 	}
 	if(self.role == ROLE_FIGHTER)
 	{
-		self.next_cellregen = time + 1;
+		self.next_cellregen = time + 0.5;
 		self.ammo_cells = self.ammo_cells + 5;
 		if(self.ammo_cells >= 100)
 		{
 			self.ammo_cells = 100;
 			stuffcmd(self, "play beta1/specialready_fighter.wav\n");
+		}
+	}
+	if(self.role == ROLE_BOMBER)
+	{
+		self.next_cellregen = time + 0.5;
+		self.ammo_cells = self.ammo_cells + 5;
+		if(self.ammo_cells >= 100)
+		{
+			self.ammo_cells = 100;
+			stuffcmd(self, "play beta1/specialready_bomber.wav\n");
 		}
 	}
 };
@@ -747,4 +1032,3 @@ void (entity pe_player, float f_type) AutoIdentify = {
 
     }
 };
-

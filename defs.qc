@@ -786,6 +786,13 @@ entity mcpflagspawn;
 
 .float heat;
 
+.float qshot1;
+.float qshot2;
+.float qshot3;
+.float qshot4;
+.float qsweapon;
+.float reloadingweapon;
+
 .float team_no;
 .float role;
 .float nextrole;
@@ -813,6 +820,7 @@ string cprint_waitingforplayers;
 .entity gren;
 .float FlashTime;
 
+
 // Dimensions
 #define DMN_FLASH 1 // when flashed, we set dimension see to this
 #define DMN_NOFLASH	256	// see all the things
@@ -821,7 +829,7 @@ string cprint_waitingforplayers;
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.06\s (26/jan/2021)"
+#define MCPVERSION				"version \sbeta 1.1\s (18/mar/2021)"
 
 #define FLAG_RESET				60
 #define FLAG_TOSSSPEED				600
@@ -830,6 +838,7 @@ string cprint_waitingforplayers;
 #define RESPAWNPENALTY_INCONTROL		5
 #define RESPAWNPENALTY_OUTOFCONTROL		0	
 
+#define WPN_RELOAD				-1
 #define WPN_NONE				0
 #define WPN_AXE					1
 #define WPN_SHOTGUN				2
@@ -851,7 +860,7 @@ string cprint_waitingforplayers;
 
 #define POINTINTERVAL				2		//seconds between awarding a point to team
 
-#define LOOT_DURATION				20		//time before backpacks/health/grens drops from death etc expire
+#define LOOT_DURATION				15		//time before backpacks/health/grens drops from death etc expire
 
 #define PLAYERSTATE_NOTREADY			0
 #define PLAYERSTATE_READY			1
@@ -881,12 +890,14 @@ string cprint_waitingforplayers;
 #define SPECIAL_DURATION_ASSASSIN		6
 #define TELEBALL_DURATION			6
 #define TELEBALL_SPEED				500
-#define HARPOON_SPEED				1750
-#define HARPOON_MAXKNOCKBACK			250
-#define HARPOON_DAMAGE				25
 
+#define HARPOON_SPEED				1750
+#define HARPOON_DAMAGE				25
+#define HARPOON_QUADWINDOW			2
+
+#define SHAFT_DAMAGE				8
 #define SHAFT_HEAL				5
-#define SHAFT_SELFHEAL				2
+#define SHAFT_SELFHEAL				5
 
 #define CLIMBINGNAIL_DURATION			3
 #define CLIMBINGNAIL_BOOST			350
@@ -894,6 +905,12 @@ string cprint_waitingforplayers;
 #define MENU_NONE				0
 #define	MENU_SELECTTEAM				1
 #define	MENU_SELECTROLE				2
+
+#define C4DAMAGE_EXPLODE			200
+
+#define CLUSTERBIGDAMAGE_DIRECT			120
+#define CLUSTERMINIDAMAGE_DIRECT		40
+#define CLUSTERMINIDAMAGE_AOE			40
 
 #define STICKYDAMAGE_DIRECT			120	
 #define STICKYDAMAGE_GROUND			120
@@ -913,12 +930,12 @@ string cprint_waitingforplayers;
 #define MAX_GRENCOUNT				2
 #define DMG_MELEE_ASSASSIN			100
 #define CLIP_MAX_SHOTGUN			8
-#define CLIP_MAX_SUPERSHOTGUN			8
+#define CLIP_MAX_SUPERSHOTGUN			2
 #define CLIP_MAX_NAILGUN			30
 #define CLIP_MAX_RAILGUN			1
 #define CLIP_MAX_ROCKETLAUNCHER			4
 #define CLIP_MAX_PIPELAUNCHER			6
-#define CLIP_MAX_SHAFT				30
+#define CLIP_MAX_SHAFT				50
 
 #define SPEED_MAX_GHOST				0
 #define SPEED_MAX_RECON				450
@@ -975,7 +992,17 @@ string cprint_waitingforplayers;
 #define IMP_2TAPGREN			15
 #define IMP_THROWGREN			16
 
+#define IMP_QSHOT1_START		20
+#define IMP_QSHOT2_START		21
+#define IMP_QSHOT3_START		22
+#define IMP_QSHOT4_START		23
+#define IMP_QSHOT1_STOP			24
+#define IMP_QSHOT2_STOP			25
+#define IMP_QSHOT3_STOP			26
+#define IMP_QSHOT4_STOP			27
+
 #define IMP_RELOAD			28
+#define IMP_RELOADNEXT			29
 #define IMP_SPECIAL			30
 #define IMP_INV				36
 #define IMP_FLAGINFO			37
@@ -1029,6 +1056,7 @@ string cprint_waitingforplayers;
 #define IMP_HELP_BOMBER			174
 #define IMP_HELP_SUPPORT		175
 
+#define IMP_1HP				199
 
 #define IMP_NULL			666
 //IMPULSE -- END
