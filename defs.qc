@@ -907,6 +907,7 @@ string cprint_waitingforplayers;
 #define	MENU_SELECTROLE				2
 
 #define C4DAMAGE_EXPLODE			200
+#define C4_ARMTIME				1;
 
 #define CLUSTERBIGDAMAGE_DIRECT			120
 #define CLUSTERMINIDAMAGE_DIRECT		40

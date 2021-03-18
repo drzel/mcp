@@ -780,8 +780,8 @@ void ThrowC4() =
 	newmis.owner = self;
 	
 	newmis.team_no = self.team_no;
-
-	newmis.nextthink = time + 1;
+	newmis.bubble_count = time + C4_ARMTIME;
+	newmis.nextthink = time + C4_ARMTIME;
 	newmis.think = C4_Arm;
 	newmis.touch = C4_AirTouch;
 	setorigin(newmis, self.origin);
