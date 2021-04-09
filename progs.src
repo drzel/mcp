@@ -19,7 +19,6 @@ playermodel.qc
 
 spectate.qc
 world.qc
-
 lordy_classleash.qc
 mcp_game.qc
 mcp_items.qc
