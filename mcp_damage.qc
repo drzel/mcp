@@ -117,6 +117,12 @@ void Knockback(entity targ, entity inflictor, entity attacker, float damage) =
 // figure momentum add
 	if ( (inflictor != world) && (targ.movetype == MOVETYPE_WALK) )
 	{
+		if(targ.role == ROLE_MGUNNER && targ.minigunstate != MINIGUNSTATE_NONE)
+		{
+			damage = damage * MGUNNER_BOUNCEREDUCTION;
+			if (damage < MGUNNER_BOUNCETHRESHOLD)
+				damage = 0;
+		}
 
 		local vector dir = targ.origin - (inflictor.absmin + inflictor.absmax) * 0.5;
 		dir = normalize(dir);
@@ -145,13 +151,144 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	local   float   save;
 	local   float   take;
 	local   string  s;
+	local float knock;
+
+	if (!targ.takedamage)
+		return;
+
+	HitSound(targ, inflictor, attacker, damage);
+	knock = damage;
+	if(targ.classname == "player")
+	{
+		targ.next_healtharmourregen = time + 3;
+		
+		if(targ.role == ROLE_MGUNNER && targ.minigunstate != MINIGUNSTATE_NONE)
+			damage = damage * MGUNNER_DAMAGEREDUCTION;			
+	}
+// used by buttons and triggers to set activator for target firing
+	damage_attacker = attacker;
+
+// save damage based on the target's armor level
+	damage = ceil(damage);
+	CreateDamageNumber(damage, targ, attacker);
+	if(damage >= targ.armorvalue)
+	{
+		save = targ.armorvalue;
+		
+	}
+	else
+	{
+		save = damage;
+	}
+	take = (damage - save);
+
+// add to the damage total for clients, which will be sent as a single
+// message at the end of the frame
+// FIXME: remove after combining shotgun blasts?
+	if (targ.flags & FL_CLIENT)
+	{
+		targ.dmg_take = targ.dmg_take + take;
+		targ.dmg_save = targ.dmg_save + save;
+		targ.dmg_inflictor = inflictor;
+	}
+
+	damage_inflictor = inflictor;        
+
+
+// figure momentum add
+		if(inflictor.classname == "harpoon" && targ.team_no != attacker.team_no && inflictor.voided == 0)
+		{
+			HarpoonToward(targ, inflictor, attacker);
+			local float rng = MyRNG(2);
+			if(rng == 1)
+				FO_Sound(attacker, CHAN_AUTO, "beta1/harpoon_enemy1.wav", 1, ATTN_NORM);
+			if(rng == 2)
+				FO_Sound(attacker, CHAN_AUTO, "beta1/harpoon_enemy2.wav", 1, ATTN_NORM);
+		}
+		else
+		{
+			if(targ.deathtype != "grenade_shatter")
+				Knockback(targ, inflictor, attacker, knock);
+		}
+
+
+// check for godmode or invincibility
+	if (targ.flags & FL_GODMODE)
+		return;
+	if (targ.invincible_finished >= time)
+	{
+		if (self.invincible_sound < time)
+		{
+			FO_Sound(targ, CHAN_ITEM, "items/protect3.wav", 1, ATTN_NORM);
+			self.invincible_sound = time + 2;
+		}
+		return;
+	}
+
+// team play damage avoidance
+	if (targ.team_no == attacker.team_no && inflictor.classname != "door" && attacker != targ)
+	{
+
+		return;
+	}
+
+		
+// do the damage
+	if (save >= targ.armorvalue)
+	{
+		save = targ.armorvalue;
+		if(targ.armorvalue > 0)
+			{
+				//FO_Sound(targ, CHAN_ITEM, "beta1/armour_break.wav", 1, ATTN_NORM);
+			}
+	}
+	
+	targ.armorvalue = targ.armorvalue - save;
+	
+	if(targ.deathtype != "grenade_shatter")
+		targ.health = targ.health - take;
+			
+	if (targ.health <= 0)
+	{
+		Killed (targ, attacker);
+		return;
+	}
+
+// react to the damage
+	oldself = self;
+	self = targ;
+
+
+	if (self.th_pain)
+	{
+		self.th_pain (attacker, take);
+	}
+
+	self = oldself;
+};
+
+/*
+void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
+{
+	local   vector  dir;
+	local   entity  oldself;
+	local   float   save;
+	local   float   take;
+	local   string  s;
 
 	if (!targ.takedamage)
 		return;
 
 	HitSound(targ, inflictor, attacker, damage);
 	if(targ.classname == "player")
+	{
 		targ.next_healtharmourregen = time + 3;
+		if(targ.role == ROLE_MGUNNER)
+		{
+			if(targ.minigunstate != MINIGUNSTATE_NONE)
+				damage = damage * MGUNNER_DMGREDUCTION;			
+		}
+	}
 // used by buttons and triggers to set activator for target firing
 	damage_attacker = attacker;
 
@@ -249,7 +386,7 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 
 	self = oldself;
 };
-
+*/
 
 //T_RadiusDamage
 void(entity inflictor, entity attacker, float damage, entity ignore, string dtype) T_RadiusDamage =
@@ -294,7 +431,7 @@ void(entity inflictor, entity attacker, float damage, entity ignore, string dtyp
 							leech = points / 2;
 							sound(attacker, CHAN_ITEM, "beta1/grenade_leech.wav", 1, ATTN_NORM);
 							attacker.health = attacker.health + leech;
-							if(attacker.health >= 150)
+							if(attacker.health >= 150 && attacker.deadflag == DEAD_NO)
 								attacker.health = 150;
 
 						}
@@ -337,6 +474,8 @@ void(entity attacker, float damage) T_BeamDamage =
 
 void GoombaStomp() =
 {
+	bprint(2,"error: goombastomp() shouldnt be called\n");
+	/*
 	if(self.hasstomped == 1)
 		return;
 	
@@ -353,12 +492,13 @@ void GoombaStomp() =
 			if(head.takedamage)
 			{
 				head.deathtype = "goomba_stomp";
-				T_Damage (head, self, self, 10);
+				T_Damage (head, self, self, GSTOMP_DAMAGE);
 				FO_Sound(self, CHAN_AUTO, "beta1/gstomp_hurt.wav", 1, ATTN_NORM);
 			}
 		}
 		head = head.chain;
 	}
+	*/
 };
 
 void (entity targ, entity inflictor, entity attacker, float damage) HitSound = 

@@ -284,7 +284,7 @@ void () MaintainLinks =
 			newlink = spawn();
 			newlink.movetype = MOVETYPE_NOCLIP;
 			newlink.solid = SOLID_NOT;
-			FO_SetModel (newlink, "progs/beta1/mcp_harpoon.mdl");
+			FO_SetModel (newlink, "progs/beta1/mcp_harpoon.mdl", DIM_WORLD);
 			setsize (newlink, '0 0 0', '0 0 0');
 			newlink.goalentity = world;
 			currlink.goalentity = newlink;
@@ -450,7 +450,7 @@ void classleash_skillone()
     puller.owner = self;
     puller.movetype = MOVETYPE_FLY;
     puller.solid = SOLID_BBOX;
-    FO_SetModel(puller, "progs/beta1/mcp_harpoon.mdl");
+    FO_SetModel(puller, "progs/beta1/mcp_harpoon.mdl", DIM_WORLD);
     setsize(puller, '0 0 0', '0 0 0');
     makevectors(self.v_angle);
     puller.origin = self.origin;
@@ -566,7 +566,7 @@ void LaunchHook()
     hook.owner = self;
     hook.movetype = MOVETYPE_FLY;
     hook.solid = SOLID_BBOX;
-    FO_SetModel(hook, "progs/beta1/mcp_harpoon.mdl");
+    FO_SetModel(hook, "progs/beta1/mcp_harpoon.mdl", DIM_WORLD);
     setsize(hook, '0 0 0', '0 0 0');
     makevectors(self.v_angle);
     hook.origin = self.origin;

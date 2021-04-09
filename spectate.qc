@@ -45,8 +45,10 @@ called when a spectator connects to a server
 */
 void() SpectatorConnect =
 {
-    self.dimension_see = DMN_NOFLASH;
-    self.dimension_seen = DMN_NOFLASH - (DMN_NOFLASH & DMN_FLASH);
+    //self.dimension_see = DMN_NOFLASH;
+    //self.dimension_seen = DMN_NOFLASH - (DMN_NOFLASH & DMN_FLASH);
+    self.dimension_see = DIM_WORLD;
+    self.dimension_seen = DIM_WORLD;
 	bprint (PRINT_MEDIUM, "Spectator ");
 	bprint (PRINT_MEDIUM, self.netname);
 	bprint (PRINT_MEDIUM, " entered the game\n");

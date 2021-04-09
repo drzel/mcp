@@ -769,6 +769,7 @@ float role_assassin_max;
 float role_fighter_max;
 float role_bomber_max;
 float role_support_max;
+float role_mgunner_max;
 
 float matchstate;
 entity lastspawn_blue;
@@ -778,11 +779,16 @@ entity gm;
 entity mcpflag;
 entity mcpflagspawn;
 
+float playerdims;	//used player dimensions
+.float pdim;
+
 .float playerstate;
 .float isconnected;
 .float ismoving;
 .float nextrespawn;
+.float nextpingpoint;
 .float killstreakcount;
+.float mgunnerspeed;  //using for mgunner shoulder
 
 .float heat;
 
@@ -792,6 +798,10 @@ entity mcpflagspawn;
 .float qshot4;
 .float qsweapon;
 .float reloadingweapon;
+.float mgun_spinup_finish;
+.float mgun_spindown_finish;
+.float mgun_queuereload;
+.float minigunstate;
 
 .float team_no;
 .float role;
@@ -811,7 +821,8 @@ string cprint_waitingforplayers;
 .string cprint_id;
 .float cprint_time;
 
-.float hasstomped;
+//.float hasstomped;
+//.float isleaping;
 
 .float cloak_complete;
 .float iscloaked;
@@ -825,17 +836,43 @@ string cprint_waitingforplayers;
 #define DMN_FLASH 1 // when flashed, we set dimension see to this
 #define DMN_NOFLASH	256	// see all the things
 
+#define DIM_WORLD		1
+#define DIM_BLUETEAM		2
+#define DIM_REDTEAM		4
+#define DIM_SPECONLY		8
+#define DIM_PLAYER1		16
+#define DIM_PLAYER2		32
+#define DIM_PLAYER3		64
+#define DIM_PLAYER4		128
+#define DIM_PLAYER5		256
+#define DIM_PLAYER6		512
+#define DIM_PLAYER7		1028
+#define DIM_PLAYER8		2048
+#define DIM_PLAYER9		4096
+#define DIM_PLAYER10		8192
+#define DIM_PLAYER11		16384
+#define DIM_PLAYER12		32768
+#define DIM_PLAYER13		65536
+#define DIM_PLAYER14		131072
+#define DIM_PLAYER15		262144
+#define DIM_PLAYER16		524288
+#define DIM_PLAYER17		1048576
+#define DIM_PLAYER18		2097152
+#define DIM_PLAYER19		4194304
+#define DIM_PLAYER20		8388608
+//#define DIM_EVERYTHING		16777216
+
 //check if contains	if (self.playerstate & PLAYERSTATE_RELOADING)
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.1\s (18/mar/2021)"
+#define MCPVERSION				"version \sbeta 1.5\s (09/apr/2021)"
 
-#define FLAG_RESET				60
+#define FLAG_RESET				15
 #define FLAG_TOSSSPEED				600
 
-#define RESPAWNPENALTY_SUICIDE			5
-#define RESPAWNPENALTY_INCONTROL		5
+#define RESPAWNPENALTY_SUICIDE			4
+#define RESPAWNPENALTY_INCONTROL		4
 #define RESPAWNPENALTY_OUTOFCONTROL		0	
 
 #define WPN_RELOAD				-1
@@ -848,15 +885,30 @@ string cprint_waitingforplayers;
 #define WPN_PIPELAUNCHER			6
 #define WPN_ROCKETLAUNCHER			7
 #define WPN_SHAFT				8
+#define WPN_MINIGUN				9
+
+#define MINIGUNSTATE_NONE			0
+#define MINIGUNSTATE_SPINNINGUP			1
+#define MINIGUNSTATE_SPINNING			2
+#define MINIGUNSTATE_SPINNINGDOWN		3
+
+#define MINIGUN_SPINUP_TIME			0.75
+#define MINIGUN_SPINDOWN_TIME			0.5
+
+#define MGUNNER_DAMAGEREDUCTION			0.5	//damage is multiplied by this
+#define MGUNNER_BOUNCEREDUCTION			0.25    //damage is multiplied by this
+#define MGUNNER_BOUNCETHRESHOLD			10	//if damage is less than this 0 bounce applied
 
 #define BACKPACK_HEAL				20
 #define BACKPACK_ARMOUR				20
+
 #define MCPFLAGSTATE_NONE			0
 #define MCPFLAGSTATE_RESET			1
 #define MCPFLAGSTATE_CARRIED			2
 #define MCPFLAGSTATE_DROPPED			3
 #define MCPFLAGSTATE_CAPPED			4
 #define MCPFLAGSTATE_THROWN			5
+#define MCPFLAGSTATE_LIMBO			6
 
 #define POINTINTERVAL				2		//seconds between awarding a point to team
 
@@ -877,23 +929,47 @@ string cprint_waitingforplayers;
 #define ROCKET_SPEED				1000
 
 #define RELOADTIME_SHOTGUN			0.25
-#define RELOADTIME_SUPERSHOTGUN			0.375
+//#define RELOADTIME_SUPERSHOTGUN		0.375
+#define RELOADTIME_SUPERSHOTGUN			0.5
+#define FIRERATE_SUPERSHOTGUN			0.6
 #define RELOADTIME_NAILGUN			0.1
-#define RELOADTIME_RAILGUN			2
+#define RELOADTIME_RAILGUN			1.5
 #define RELOADTIME_ROCKETLAUNCHER		1.25
 #define RELOADTIME_PIPELAUNCHER			0.7
 #define RELOADTIME_SHAFT			0.1
-#define FLASH_DURATION				2
-#define SPECIAL_COOLDOWN_RECON			1
-#define SPECIAL_COOLDOWN_ASSASSIN		20
-#define SPECIAL_COOLDOWN_FIGHTER		3
-#define SPECIAL_DURATION_ASSASSIN		6
-#define TELEBALL_DURATION			6
-#define TELEBALL_SPEED				500
+#define RELOADTIME_MINIGUN			0.05
 
-#define HARPOON_SPEED				1750
+
+
+#define FLASH_DURATION				2
+//#define SPECIAL_COOLDOWN_RECON			1
+//#define SPECIAL_COOLDOWN_ASSASSIN		20
+//#define SPECIAL_COOLDOWN_FIGHTER		3
+
+#define SPECIAL_DURATION_ASSASSIN		6
+#define TELEBALL_DURATION			10
+#define TELEBALL_SPEED				600
+
+#define PUSHUPGREN_RADIUS			240 
+#define PUSHUPGREN_MAXPLAYERPUSH		1200
+#define PUSHUPGREN_MINPLAYERPUSH		600
+
+#define AIRBLAST_RADIUS				150
+#define AIRBLAST_MAXPLAYERPUSH			1100
+#define AIRBLAST_MINPLAYERPUSH			500
+
+#define LEAP_FORWARD				500	//leaptype 1 (more vertical)
+#define LEAP_HEIGHT				600	//leaptype 1 (more vertical)
+
+#define LEAP_HEIGHTSCALE			1.5	//leaptype 2 (more of a charge)
+#define CHARGE_VELOCITY				800	//leaptype 2 (more of a charge)
+
+
+#define HARPOON_SPEED				1750 //1750
 #define HARPOON_DAMAGE				25
 #define HARPOON_QUADWINDOW			2
+
+#define GSTOMP_DAMAGE				999
 
 #define SHAFT_DAMAGE				8
 #define SHAFT_HEAL				5
@@ -907,11 +983,11 @@ string cprint_waitingforplayers;
 #define	MENU_SELECTROLE				2
 
 #define C4DAMAGE_EXPLODE			200
-#define C4_ARMTIME				1;
+#define C4_ARMTIME				1.5
 
-#define CLUSTERBIGDAMAGE_DIRECT			120
-#define CLUSTERMINIDAMAGE_DIRECT		40
-#define CLUSTERMINIDAMAGE_AOE			40
+#define CLUSTERBIGDAMAGE_DIRECT			150
+#define CLUSTERMINIDAMAGE_DIRECT		60
+#define CLUSTERMINIDAMAGE_AOE			60
 
 #define STICKYDAMAGE_DIRECT			120	
 #define STICKYDAMAGE_GROUND			120
@@ -927,9 +1003,10 @@ string cprint_waitingforplayers;
 #define ROLE_FIGHTER				3
 #define ROLE_BOMBER				4
 #define ROLE_SUPPORT				5
+#define ROLE_MGUNNER				6
 
 #define MAX_GRENCOUNT				2
-#define DMG_MELEE_ASSASSIN			100
+#define DMG_MELEE_ASSASSIN			200
 #define CLIP_MAX_SHOTGUN			8
 #define CLIP_MAX_SUPERSHOTGUN			2
 #define CLIP_MAX_NAILGUN			30
@@ -937,6 +1014,7 @@ string cprint_waitingforplayers;
 #define CLIP_MAX_ROCKETLAUNCHER			4
 #define CLIP_MAX_PIPELAUNCHER			6
 #define CLIP_MAX_SHAFT				50
+#define CLIP_MAX_MINIGUN			100
 
 #define SPEED_MAX_GHOST				0
 #define SPEED_MAX_RECON				450
@@ -945,11 +1023,16 @@ string cprint_waitingforplayers;
 #define SPEED_MAX_BOMBER			280
 #define SPEED_MAX_SUPPORT			320
 
+#define SPEED_MAX_MGUNNER			230
+#define SPEED_MAX_MGUNNER_SPINNING		80
+//#define SPEED_MAX_MGUNNER_FAST			500
+
 #define ARMOUR_MAX_RECON			25
 #define ARMOUR_MAX_ASSASSIN			0
 #define ARMOUR_MAX_FIGHTER			150
 #define ARMOUR_MAX_BOMBER			125
 #define ARMOUR_MAX_SUPPORT			50
+#define ARMOUR_MAX_MGUNNER			150
 
 #define SPRITE_0				0
 #define SPRITE_1				1
@@ -1018,6 +1101,7 @@ string cprint_waitingforplayers;
 #define IMP_GOFIGHTER			113
 #define IMP_GOBOMBER			114
 #define IMP_GOSUPPORT			115
+#define IMP_GOMGUNNER			116
 
 #define IMP_VERSION			118
 
@@ -1058,6 +1142,7 @@ string cprint_waitingforplayers;
 #define IMP_HELP_SUPPORT		175
 
 #define IMP_1HP				199
+#define IMP_CREATEPING			200
 
 #define IMP_NULL			666
 //IMPULSE -- END

@@ -280,7 +280,7 @@ void zPreCache() =
 
 	//misc
 	
-	precache_model ("progs/beta1/mcp_player.mdl");
+	precache_model ("progs/beta1/mcp_player2.mdl");
 
 	precache_model("progs/beta1/mcp_flag.mdl");
 	precache_model("progs/beta1/mcp_armourshard.mdl");
@@ -327,10 +327,15 @@ void zPreCache() =
 	precache_model("progs/beta1/wpn/red_pipelauncher.mdl");
 	precache_model("progs/beta1/wpn/blue_shaft.mdl");
 	precache_model("progs/beta1/wpn/red_shaft.mdl");
+	precache_model("progs/beta1/wpn/blue_minigun.mdl");
+	precache_model("progs/beta1/wpn/red_minigun.mdl");
 	
 	//sprites
 	precache_model("progs/beta1/s_mcp.spr");
 	precache_model("progs/beta1/mcp_flagtrail.spr");
+	precache_model("progs/beta1/mcp_dmgnum512.spr");
+	precache_model("progs/beta1/mcp_dmgnum999.spr");
+	precache_model("progs/beta1/mcp_pingt1.spr");
 	
 	//SOUND
 	
@@ -345,7 +350,12 @@ void zPreCache() =
 	precache_sound("beta1/voice_fight.wav");
 	precache_sound("beta1/voice_blueleads.wav");
 	precache_sound("beta1/voice_redleads.wav");
-
+	//precache_sound("beta1/mlg.wav");
+	//precache_sound("beta1/oof.wav");
+	precache_sound("beta1/thomas.wav");
+	precache_sound("beta1/insideout.wav");
+	precache_sound("beta1/alert.wav");
+	
 	precache_sound("beta1/voice_enemyhasflag.wav");
 	precache_sound("beta1/voice_teamhasflag.wav");
 	precache_sound("beta1/voice_youhaveflag.wav");
@@ -398,6 +408,7 @@ void zPreCache() =
 	precache_sound("beta1/reload_supernailgun.wav");	//DSGRLOAD
 	precache_sound("beta1/reload_shaft.wav");		//DSITEMUP
 	precache_sound("beta1/reload_railgun.wav");
+	precache_sound("beta1/reload_minigun.wav");
 	
 	//specials
 	precache_sound("beta1/dash.wav");		//KICK
@@ -410,6 +421,8 @@ void zPreCache() =
 	precache_sound("beta1/specialready_support.wav");
 	precache_sound("beta1/specialready_fighter.wav");	
 	precache_sound("beta1/specialready_bomber.wav");
+	precache_sound("beta1/chargeready.wav");
+	precache_sound("beta1/charge.wav");
 	
 	precache_sound("beta1/regenhealth.wav");
 	precache_sound("beta1/regenarmour.wav");
@@ -427,6 +440,7 @@ void zPreCache() =
 	precache_sound("beta1/hitsound_rail2.wav");
 	precache_sound("beta1/hitsound_rail3.wav");
 	
+	precache_sound("beta1/airblast_shoot.wav");
 	precache_sound("beta1/cloak.wav");
 	precache_sound("beta1/uncloak.wav");
 	precache_sound("beta1/grenade_flash.wav");
@@ -452,6 +466,11 @@ void zPreCache() =
 	precache_sound("beta1/c4_detonate.wav");
 	precache_sound("beta1/c4_explode.wav");
 	precache_sound("beta1/c4_armed.wav");
+	
+	precache_sound("beta1/minigun_spinup.wav");
+	precache_sound("beta1/minigun_spindown.wav");
+	precache_sound("beta1/minigun_spin.wav");
+	precache_sound("beta1/minigun_shoot.wav");
 	
 	//grentimers
 	precache_sound("beta1/mcp_grentimer1.wav");

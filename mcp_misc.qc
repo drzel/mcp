@@ -187,6 +187,9 @@ void RefreshObjectiveString() =
 	self.cprint_obj = strcat(line1,"\n", line2);
 	
 };
+
+
+
 void CPrintRefresh() =
 {
 	if(self.menu != MENU_NONE)
@@ -262,5 +265,197 @@ void SoundTeam (float team, entity exclude, string file) =
 			stuffcmd(te, strcat("play ", file, "\n"));
 		}
 		te = find(te, classname, "player");
+	}
+};
+
+void ResetVisDimensions(entity e) =
+{
+	e.dimension_see = DIM_WORLD;
+
+	if(e.team_no == TEAM_BLUE)
+		e.dimension_see = e.dimension_see | DIM_BLUETEAM;
+	if(e.team_no == TEAM_RED)
+		e.dimension_see = e.dimension_see | DIM_REDTEAM;
+	if(e.pdim != 0)
+		e.dimension_see = e.dimension_see | e.pdim;
+	
+};
+
+void AddVisDimension (entity e, float dim) =
+{
+	e.dimension_see = e.dimension_see | dim;
+};
+
+void RemoveVisDimension (entity e, float dim) =
+{
+	e.dimension_see = e.dimension_see - (e.dimension_see & dim);
+};
+
+float ContainsVisDimension (entity e, float dim) =
+{
+	local float res = 0;
+	
+	if (e.dimension_see & dim)
+		res = 1;
+	
+	return res;
+};
+
+void AssignPlayerDim() =
+{
+	if(self.pdim != 0)
+		return;
+	if(self.role == ROLE_NONE || self.nextrole == ROLE_NONE)
+		return;
+		
+	local float res = 0;
+	local float i;
+	for (i = DIM_PLAYER1; i < DIM_PLAYER20; i = i * 2)
+	{
+		if(!(playerdims & i))
+		{
+			self.pdim = i;
+			playerdims = playerdims | i;
+			bprint(2,strcat(self.netname, " assigned dimension ", ftos(i), "\n"));
+			res = 1;
+			break;
+		}
+		
+	}
+	if(res == 0)
+	{
+		bprint(2,strcat("warning: couldnt find empty dimension for ", self.netname, "\n"));
+		return;
+	}
+
+	
+};
+
+void UnassignPlayerDim() =
+{
+	if(self.pdim == 0)
+		return;
+	playerdims = playerdims - (playerdims & self.pdim);
+};
+
+void CreateDamageNumber(float damage, entity targ, entity attacker) =
+{
+	if(attacker.classname != "player")
+		return;
+	if(attacker.team_no == targ.team_no)
+		return;
+	if(attacker.pdim == 0)
+		return;
+		
+	if(infokey(attacker, "nohitnumbers") == "1")
+		return;
+	damage = floor(damage);
+	if(damage <= 0)
+		return;
+
+	if(damage > 999)
+	{
+		damage = 999;
+	}
+	
+	local entity sp = spawn();
+	sp.classname = "damagenumber";
+	
+	if(damage <= 512)
+	{
+
+		FO_SetModel(sp,"progs/beta1/mcp_dmgnum512.spr", attacker.pdim);
+		sp.frame = damage-1;
+	}
+	else
+	{
+		FO_SetModel(sp,"progs/beta1/mcp_dmgnum999.spr", attacker.pdim);
+		sp.frame = damage-512-1;
+	}
+	
+		setsize (sp, '-16 -16 -32', '16 16 32');
+		setorigin(sp, targ.origin + '0 0 64');
+		sp.think = SUB_Remove;
+		sp.nextthink = time + 2;
+		sp.movetype = MOVETYPE_FLY;
+		sp.solid = SOLID_NOT;
+		sp.velocity = '0 0 1' * 150;
+	
+	
+};
+
+void pingvisual_think() =
+{
+	if(time > self.bubble_count)
+	{
+
+		remove(self);
+		return;
+	}
+	if(self.model == "" && self.owner.pdim != 0)
+	{
+
+		FO_SetModel(self,"progs/beta1/mcp_pingt1.spr", self.owner.pdim);
+		if(self.owner.team_no == TEAM_BLUE)
+			self.frame = 9;
+		else
+			self.frame = 9;
+	}
+		
+	traceline(self.owner.origin, self.gren.origin, 0, self);
+	local float len = vlen(trace_endpos - self.owner.origin);
+	
+	local vector dir = normalize(trace_endpos - self.owner.origin);
+	local float dist1 = vlen(trace_endpos - self.owner.origin);
+	local float dist2 = vlen(self.gren.origin - self.owner.origin);
+	//local float dist3 = dist1/dist2;
+	
+	//bprint(2, strcat(ftos(dist2),"trfrac\n"));
+	local vector pos = self.owner.origin + (dir * (len * 0.9));	//doing this to pull sprite back a little bit
+	
+	pos = pos + '0 0 32';
+	setorigin(self,pos);
+	self.nextthink = time + 0.1;
+	
+	
+};
+
+void CreatePingPoint() =
+{
+	self.impulse = 0;
+	if(self.nextpingpoint > time)
+		return;
+		
+	self.nextpingpoint = time + 0.5;
+	makevectors (self.v_angle);
+	local vector org = self.origin + '0 0 16';
+	traceline(org, org + v_forward * 3000, 0, self);
+
+	local entity h = spawn();
+	h.classname = "pingpoint";
+	h.owner = self;
+	h.nextthink = time + 3;
+	h.think = SUB_Remove;
+	
+	setorigin(h, trace_endpos);
+	SoundTeam (self.team_no, world, "beta1/alert.wav");
+	//FO_SetModel(h,"progs/beta1/s_mcp.spr", self.pdim);
+	//h.frame = SPRITE_BLUESPAWN;
+	
+	local entity te = find(world, classname, "player");
+	while(te)
+	{
+		if(te.team_no == self.team_no)
+		{
+			local entity pingvis = spawn();
+			pingvis.owner = te;
+			pingvis.gren = h;
+			pingvis.classname = "pingvisual";
+			pingvis.think = pingvisual_think;
+			pingvis.nextthink = time;
+			pingvis.bubble_count = time + 3;
+			setorigin(pingvis, trace_endpos);
+		}
+		te = find(te,classname,"player");
 	}
 };

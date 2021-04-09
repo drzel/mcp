@@ -44,6 +44,14 @@ float Imp2Weap(float imp) =
 		slot3 = WPN_SUPERSHOTGUN;
 		slot4 = WPN_SHAFT;				
 	}
+	
+	if(self.role == ROLE_MGUNNER)
+	{
+		slot1 = WPN_AXE;
+		slot2 = WPN_SHOTGUN;
+		slot3 = WPN_SUPERSHOTGUN;
+		slot4 = WPN_MINIGUN;				
+	}
 
 	if(infokey(self, "tf2slots") == "1")
 	{
@@ -192,6 +200,9 @@ string GetWeaponModel() =
 		case WPN_SHAFT:
 			wpn = "shaft";
 			break;
+		case WPN_MINIGUN:
+			wpn = "minigun";
+			break;
 						
 		default:            
 			break;
@@ -231,6 +242,11 @@ void ChangeHudAmmo(entity owner, float wpn) =
 	{
 		owner.currentammo = owner.clip_curr_primary;
 		owner.items = owner.items | IT_CELLS;
+	}
+	else if (wpn == WPN_MINIGUN)
+	{
+		owner.currentammo = owner.clip_curr_primary;
+		owner.items = owner.items | IT_SHELLS;
 	}
 	else
 	{
@@ -354,6 +370,18 @@ void ChangeWeaponModel(float wpn) =
 		}
 		self.weaponframe = 0;
 	}
+	else if (wpn == WPN_MINIGUN)
+	{
+		if(self.team_no == TEAM_BLUE)
+		{
+			self.weaponmodel = "progs/beta1/wpn/blue_minigun.mdl";
+		}
+		if(self.team_no == TEAM_RED)
+		{
+			self.weaponmodel = "progs/beta1/wpn/red_minigun.mdl";
+		}
+		self.weaponframe = 0;
+	}
 	else if (wpn == WPN_RELOAD)
 	{
 		self.weaponmodel = "";
@@ -455,6 +483,9 @@ void W_ZutChangeWeapon(float imp) =
 	self.weapon = wpn;
 	ChangeWeaponModel(self.weapon);
 	ChangeHudAmmo(self,self.weapon);
+	
+	if(self.role == ROLE_MGUNNER)
+		SetPlayerSpeed();
 };
 
 
@@ -572,7 +603,7 @@ void MCP_Attack(float wpn) =
 		}
 		*/
 		
-		self.attack_finished = time + 0.5;
+		self.attack_finished = time + FIRERATE_SUPERSHOTGUN;
 		player_shot1();
 		
 		self.clip_curr_secondary = self.clip_curr_secondary - 1;
@@ -589,14 +620,16 @@ void MCP_Attack(float wpn) =
 		
 		
 		FireBullets (14, dir2, '0.14 0.08 0');
-		if(self.v_angle_x > 25)
+		if(self.role == ROLE_RECON)
 		{
-			
-			local float lookdown = self.v_angle_x/60 * 350;
-			//bprint(2,strcat(ftos(lookdown)," lokdwn\n"));
-			//self.velocity = (normalize(dir2) * -1)  * lookdown;
-			self.velocity.z = lookdown;
+			if(self.v_angle_x > 25)
+			{
+				
+				local float lookdown = self.v_angle_x/60 * 350;
+				self.velocity.z = lookdown;
+			}
 		}
+		
 		if(self.clip_curr_secondary == 0)
 		{
 			ReloadWeapon(WPN_SUPERSHOTGUN);
@@ -605,6 +638,19 @@ void MCP_Attack(float wpn) =
 	else if (wpn == WPN_NAILGUN)
 	{
 			player_nail1();
+
+	}
+	else if (wpn == WPN_MINIGUN)
+	{
+		if(self.minigunstate == MINIGUNSTATE_NONE)
+		{
+			FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spinup.wav", 1, ATTN_NORM);
+			self.mgun_spinup_finish = time + MINIGUN_SPINUP_TIME;
+			self.minigunstate = MINIGUNSTATE_SPINNINGUP;
+			player_minigunup();
+			SetPlayerSpeed();
+			
+		}
 
 	}
 	else if (wpn == WPN_ROCKETLAUNCHER)
@@ -676,8 +722,8 @@ void MCP_Attack(float wpn) =
 		ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
 		if (trace_ent.takedamage)
 		{
-			local float maxdamage = 50;
-			local float mindamage = 10;
+			local float maxdamage = 60;
+			local float mindamage = 20;
 			local float mindistance = 300;
 			local float maxdistance = 1200;
 			local float dmg;
@@ -774,8 +820,10 @@ void MCP_Attack(float wpn) =
 		multicast (org, MULTICAST_PHS);
 		}
 	}
-		
+
+
 };
+
 
 void () t_climbingnail = {
 
@@ -871,7 +919,8 @@ void SpawnNail()=
 	dir = aim (self, 1000);
 	launch_spike (self.origin + '0 0 16', dir);
 	newmis.touch = superspike_touch;
-	FO_SetModel(newmis, "progs/beta1/mcp_nail.mdl");
+	newmis.classname = "nail";
+	FO_SetModel(newmis, "progs/beta1/mcp_nail.mdl", DIM_WORLD);
 	if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 	if(self.team_no == TEAM_RED)
@@ -903,7 +952,7 @@ void SpawnMissile()=
 		newmis.think = SUB_Remove;
 		newmis.classname = "rocket";
 
-		FO_SetModel(newmis, "progs/beta1/mcp_missile.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_missile.mdl",DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 			newmis.skin = 1;
 		if(self.team_no == TEAM_RED)
@@ -924,7 +973,7 @@ void SpawnMiniCluster(float x)
 	newmis1.owner = self.owner;
 	newmis1.movetype = MOVETYPE_BOUNCE;
 	newmis1.solid = SOLID_TRIGGER;
-	//newmis1.classname = "clustermini";
+	newmis1.classname = "clustermini";
 	local vector dir2 = vectoangles(dir);
 	dir2_y = dir2_y + x * 6;
 	makevectors (dir2);
@@ -934,7 +983,7 @@ void SpawnMiniCluster(float x)
 	
 	newmis1.velocity = vec * speed;
 	
-	FO_SetModel(newmis1, "progs/beta1/mcp_pinesmall.mdl");
+	FO_SetModel(newmis1, "progs/beta1/mcp_pinesmall.mdl", DIM_WORLD);
 	if(self.owner.team_no == TEAM_BLUE)
 		newmis1.skin = 1;
 	if(self.owner.team_no == TEAM_RED)
@@ -990,7 +1039,7 @@ void SpawnSticky()=
 		newmis.think = SUB_Remove;
 		newmis.nextthink = time + 5;
 
-		FO_SetModel(newmis, "progs/beta1/mcp_sticky.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_sticky.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 			newmis.skin = 1;
 		if(self.team_no == TEAM_RED)
@@ -1031,7 +1080,7 @@ void SpawnClusterGren()=
 		newmis.think = SUB_Remove;
 		newmis.nextthink = time + 5;
 
-		FO_SetModel(newmis, "progs/beta1/mcp_pinebig.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_pinebig.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 			newmis.skin = 1;
 		if(self.team_no == TEAM_RED)

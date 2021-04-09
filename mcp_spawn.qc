@@ -8,19 +8,23 @@ void ClearPlayerState() =
 	DisableGrenEffectOnDeath();
 	DisableHarpoonPull();
 	KillHarpoonTimers();
+	KillMgunnerSpeedTracker();
 	KillC4();
+	KillMCPFlashTimer();
 	//DestroyBeartraps();
 	//DetStickys();
 	DeathMCPFlag();
 	
 	self.reload_complete = 0;
 	self.isreloading = 0;
-
+	
 	self.cloak_complete = 0;
 	self.iscloaked = 0;
 	self.gren = world;
 	self.heat = 0;
 	self.killstreakcount = 0;
+	self.minigunstate = MINIGUNSTATE_NONE;
+	ResetVisDimensions(self);
 };
 
 void SetTeamFragsColourName() =
@@ -119,10 +123,111 @@ void ExecClassConfig() =
 		}
 };
 
+
+void mcpplayer_touch()=
+{
+	if(self.deadflag != DEAD_NO)
+		return;
+	
+		
+
+		
+	if(other.classname == "player" && other.team_no != self.team_no && other.deadflag == DEAD_NO)
+	{
+		if(other.takedamage)
+		{
+			local float zdist = (other.origin_z + 32)  - (self.origin_z - 24);
+			
+			if(zdist <= 0)
+			{
+				//bprint(2,strcat(ftos(dist),self.netname,"gomb", other.netname,"\n"));
+			
+				other.deathtype = "goomba_stomp";
+				T_Damage (other, self, self, GSTOMP_DAMAGE);
+				FO_Sound(self, CHAN_AUTO, "beta1/gstomp_hurt.wav", 1, ATTN_NORM);
+				return;
+			}
+		}
+		
+
+		if(self.role != ROLE_MGUNNER)
+			return;
+		
+		local float MGUNNERTOUCH_MAXDAMAGE = 400;
+		local float MGUNNERTOUCH_MINDAMAGE = 10;
+		local float MGUNNERTOUCH_MINVELOCITY = 300;
+		local float MGUNNERTOUCH_MAXVELOCITY = 1000;
+		
+
+		if(self.mgunnerspeed < MGUNNERTOUCH_MINVELOCITY)
+			return;
+		
+		local entity te = find(world, classname, "mgunner_col");
+		while (te) 
+		{
+			if (te.enemy == other && te.owner == self) 
+			{
+				return;
+			}
+			te = find(te, classname, "mgunner_col");
+		}
+		
+		
+
+		
+		local entity mcol = spawn();
+		mcol.classname = "mgunner_col";
+		mcol.enemy = other;
+		mcol.owner = self;
+		mcol.team_no = self.team_no;
+		mcol.think = SUB_Remove;
+		mcol.origin = self.origin;
+		mcol.nextthink = time + 0.2;
+		mcol.angles = vectoangles(self.velocity);
+		
+		local float impactdamage = (self.mgunnerspeed - MGUNNERTOUCH_MINVELOCITY) / MGUNNERTOUCH_MAXVELOCITY;
+		impactdamage = rint(impactdamage * MGUNNERTOUCH_MAXDAMAGE);
+		if(impactdamage < MGUNNERTOUCH_MINDAMAGE)
+			impactdamage = MGUNNERTOUCH_MINDAMAGE;
+		
+		sprint(self, PRINT_HIGH, strcat("you shoulder charge ", other.netname, " at a speed of ", ftos(rint(self.mgunnerspeed)), " causing ", ftos(impactdamage), " damage.\n"));	
+		other.deathtype = "shouldercharge";
+		T_Damage (other, mcol, self, impactdamage );
+
+	}
+};
+
+void speedtracker_think() =
+{
+	self.owner.mgunnerspeed = vlen(self.owner.velocity);
+	self.nextthink = time + 0.05;
+};
+void MgunnerSpeedTracker() = 
+{
+		local entity te = find(world, classname, "speedtracker");
+		while (te) 
+		{
+			if (te.owner == self && te != world) 
+			{
+				return;
+			}
+			te = find(te, classname, "speedtracker");
+		}
+		
+	
+		local entity st = spawn();
+		st.classname = "speedtracker";
+		st.owner = self;
+		st.think = speedtracker_think;
+		st.nextthink = time + 0.05;
+};
+
 void SpawnPlayerZut () =
 {
-	self.dimension_see = DMN_NOFLASH;
-	self.dimension_seen = DMN_NOFLASH - (DMN_NOFLASH & DMN_FLASH);
+	//self.dimension_see = DMN_NOFLASH;
+	//self.dimension_seen = DMN_NOFLASH - (DMN_NOFLASH & DMN_FLASH);
+	self.dimension_see = DIM_WORLD;
+	self.dimension_seen = DIM_WORLD;
 	self.velocity = '0 0 0';
 	self.health = 100;
 	self.armortype = 0.8;
@@ -159,7 +264,7 @@ void SpawnPlayerZut () =
 		setmodel(self, "progs/eyes.mdl");
 		modelindex_eyes = self.modelindex;
 
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 
 		self.items = 0;
@@ -175,6 +280,7 @@ void SpawnPlayerZut () =
 		self.armorvalue = 0;
 		setmodel (self, "");
 		ShowMenu(MENU_SELECTTEAM);
+		self.touch = SUB_Null;
 	}
 	
 	if(self.nextrole == ROLE_RECON)
@@ -185,14 +291,15 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_NAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_RECON;
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_NAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
 		self.clip_curr_tertiary = CLIP_MAX_SHOTGUN;
-		self.ammo_cells = 100;
+		self.ammo_cells = 75;
 		self.grencount = MAX_GRENCOUNT;
 		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
 	}
 	
 	if(self.nextrole == ROLE_ASSASSIN)
@@ -203,7 +310,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_RAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_ASSASSIN;
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_RAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -211,6 +318,7 @@ void SpawnPlayerZut () =
 		self.ammo_cells = 75;
 		self.grencount = MAX_GRENCOUNT;
 		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
 	}
 	if(self.nextrole == ROLE_FIGHTER)
 	{
@@ -220,7 +328,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_ROCKETLAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_FIGHTER;
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_ROCKETLAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -228,6 +336,7 @@ void SpawnPlayerZut () =
 		self.ammo_cells = 75;
 		self.grencount = MAX_GRENCOUNT;
 		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
 	}
 	if(self.nextrole == ROLE_BOMBER)
 	{
@@ -237,14 +346,15 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_PIPELAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_BOMBER;
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_PIPELAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
 		self.clip_curr_tertiary = CLIP_MAX_SHOTGUN;
-		self.ammo_cells = 100;
+		self.ammo_cells = 75;
 		self.grencount = MAX_GRENCOUNT;
 		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
 	}	
 	if(self.nextrole == ROLE_SUPPORT)
 	{
@@ -254,7 +364,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_SHAFT;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_SUPPORT;
-		FO_SetModel(self, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_SHAFT;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -262,7 +372,27 @@ void SpawnPlayerZut () =
 		self.ammo_cells = 75;
 		self.grencount = MAX_GRENCOUNT;
 		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
 	}
+	if(self.nextrole == ROLE_MGUNNER)
+	{
+		self.role = ROLE_MGUNNER;
+		self.nextrole = ROLE_MGUNNER;
+		sprint(self, PRINT_HIGH, "playing as minigunner.\n");
+		self.weapon = WPN_MINIGUN;
+		self.items = self.items | IT_ARMOR2;
+		self.armorvalue = ARMOUR_MAX_MGUNNER;
+		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		modelindex_player = self.modelindex;
+		self.clip_curr_primary = CLIP_MAX_MINIGUN;
+		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
+		self.clip_curr_tertiary = CLIP_MAX_SHOTGUN;
+		self.ammo_cells = 75;
+		self.grencount = MAX_GRENCOUNT;
+		self.ammo_nails = self.grencount;
+		self.touch = mcpplayer_touch;
+	}
+	AssignPlayerDim();
 	player_stand1();
 	SetTeamFragsColourName();
 	ChangeWeaponModel(self.weapon);
@@ -273,6 +403,10 @@ void SpawnPlayerZut () =
 	ExecTeamConfig();
 	ExecClassConfig();
 	SetPlayerSpeed();
+	
+	
+	if(self.role == ROLE_MGUNNER)
+		MgunnerSpeedTracker();
 	
 	if(self.role != ROLE_NONE)
 	{
@@ -418,6 +552,50 @@ entity MCPSpawnPoint () =
 void SetPlayerModelSkin() =
 {
 	// 0 - base  
+	// 1 - b_recon 		// 9 - r recon
+	// 2 - b assasssin	// 10 - r assassin
+	// 3 - b fighter	// 11 - r fighter
+	// 4 - b bomber		// 12 - r bomber
+	// 5 - b support	// 13 - r support
+	// 6 - b mgunner	// 14 - r mgunner
+	// 7 - b pyro		// 15 - r pyro
+	// 8 - b engineer	// 16 - r eng
+	
+	if(self.team_no == TEAM_BLUE)
+	{
+		if(self.role == ROLE_RECON)
+			self.skin = 1;
+		if(self.role == ROLE_ASSASSIN)
+			self.skin = 2;
+		if(self.role == ROLE_FIGHTER)
+			self.skin = 3;
+		if(self.role == ROLE_BOMBER)
+			self.skin = 4;
+		if(self.role == ROLE_SUPPORT)
+			self.skin = 5;
+		if(self.role == ROLE_MGUNNER)
+			self.skin = 6;
+	}
+	if(self.team_no == TEAM_RED)
+	{
+		if(self.role == ROLE_RECON)
+			self.skin = 9;
+		if(self.role == ROLE_ASSASSIN)
+			self.skin = 10;
+		if(self.role == ROLE_FIGHTER)
+			self.skin = 11;
+		if(self.role == ROLE_BOMBER)
+			self.skin = 12;
+		if(self.role == ROLE_SUPPORT)
+			self.skin = 13;
+		if(self.role == ROLE_MGUNNER)
+			self.skin = 14;
+	}
+
+};
+void SetPlayerModelSkin2() =
+{
+	// 0 - base  
 	// 1 - b_recon 		// 6 - r recon
 	// 2 - b assasssin	// 7 - r assassin
 	// 3 - b fighter	// 8 - r fighter
@@ -435,6 +613,8 @@ void SetPlayerModelSkin() =
 			self.skin = 4;
 		if(self.role == ROLE_SUPPORT)
 			self.skin = 5;
+		if(self.role == ROLE_MGUNNER)
+			self.skin = 0;
 	}
 	if(self.team_no == TEAM_RED)
 	{
@@ -448,6 +628,8 @@ void SetPlayerModelSkin() =
 			self.skin = 9;
 		if(self.role == ROLE_SUPPORT)
 			self.skin = 10;
+		if(self.role == ROLE_MGUNNER)
+			self.skin = 0;
 	}
 
 };
@@ -513,6 +695,16 @@ void SetPlayerSpeed() =
 		
 	if(self.role == ROLE_SUPPORT)
 		spd = SPEED_MAX_SUPPORT;
+		
+	if(self.role == ROLE_MGUNNER)
+	{	
+		if(self.minigunstate == MINIGUNSTATE_SPINNING || self.minigunstate == MINIGUNSTATE_SPINNINGDOWN || self.minigunstate == MINIGUNSTATE_SPINNINGUP)
+			spd = SPEED_MAX_MGUNNER_SPINNING;
+		//else if(VisualWeapon() == WPN_AXE)
+		//	spd = SPEED_MAX_MGUNNER_FAST;
+		else
+			spd = SPEED_MAX_MGUNNER;
+	}
 
 	if(self.deadflag > 0)
 		spd = 0;
@@ -579,6 +771,20 @@ void KillC4()=
         }
 };
 
+void KillMCPFlashTimer()=
+{
+	local entity te = find(world, classname, "mcpflashtimer");
+	while (te) 
+	{
+		if (te.owner == self && te != world) 
+		{
+			te.think = SUB_Remove;
+			te.nextthink = time;
+		}
+		te = find(te, classname, "mcpflashtimer");
+        }
+	
+};
 void KillCloakEnt()=
 {
 
@@ -693,6 +899,19 @@ void KillAllPlayers() =
 		te = find(te, classname, "player");
 	}
 
+};
+
+void KillMgunnerSpeedTracker() =
+{
+		local entity te = find(world, classname, "speedtracker");
+		while (te) 
+		{
+			if (te.owner == self && te != world) 
+			{
+				remove(te);
+			}
+			te = find(te, classname, "speedtracker");
+		}
 };
 
 void KillAllDrops() =

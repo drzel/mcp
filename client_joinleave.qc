@@ -108,5 +108,6 @@ void() ClientDisconnect =
 	self.solid = SOLID_NOT;
 	setsize(self, '0 0 0', '0 0 0');
 	self.isconnected = 0;
+	UnassignPlayerDim();
 	//remove(self);
 };

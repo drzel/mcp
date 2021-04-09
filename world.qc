@@ -120,8 +120,8 @@ void() worldspawn =
 	worldspawnent.nextthink = time + .01;
 	
 	CreateGameManager();
-	dimension_send = DMN_NOFLASH;
-	
+	//dimension_send = DMN_NOFLASH;
+	dimension_send = DIM_WORLD;
 };
 
 void() StartFrame =
@@ -169,7 +169,7 @@ void() InitBodyQue =
 void(entity ent) CopyToBodyQue =
 {
 	bodyque_head.angles = ent.angles;
-	FO_SetModel(bodyque_head, "progs/beta1/mcp_player.mdl");
+	FO_SetModel(bodyque_head, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 	//bodyque_head.model = ent.model;
 	bodyque_head.skin = ent.skin;
 	bodyque_head.modelindex = ent.modelindex;
@@ -183,11 +183,31 @@ void(entity ent) CopyToBodyQue =
 	bodyque_head = bodyque_head.owner;
 };
 
+void CreateCorpse (entity oldent) =
+{
+	local entity new = spawn();
+	FO_SetModel(new, oldent.model, DIM_WORLD);
+	new.angles = oldent.angles;
+	new.skin = oldent.skin;
+	new.modelindex = oldent.modelindex;
+	new.frame = oldent.frame;
+	new.flags = 0;
+	new.colormap = oldent.colormap;
+	new.movetype = oldent.movetype;
+	new.velocity = oldent.velocity;
+	setorigin(new, oldent.origin);
+	setsize(new, oldent.mins, oldent.maxs);
+	new.classname = "corpse";
+	
+	new.think = SUB_Remove;
+	new.nextthink = time + 45;
+};
+
 void(void() fnc)CheckSpawn = {
     if(fnc)
     {
-        self.dimension_seen = DMN_NOFLASH | DMN_FLASH;
-        //bprint(PRINT_HIGH, strcat("spawning: ", self.classname, "\n"));
+        //self.dimension_seen = DMN_NOFLASH | DMN_FLASH;
+	self.dimension_seen = DIM_WORLD;
         fnc();
     }
     else 

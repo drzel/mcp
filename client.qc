@@ -315,7 +315,7 @@ void() PlayerJump =
 
 // player jumping sound
 	FO_Sound(self, CHAN_BODY, "player/plyrjmp8.wav", 1, ATTN_NORM);
-	self.hasstomped = 0;
+	//self.hasstomped = 0;
 };
 
 

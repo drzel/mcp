@@ -44,7 +44,7 @@ void Cloak_Think()=
 	if(self.bubble_count >= SPECIAL_DURATION_ASSASSIN)
 	{
 		self.owner.cloak_complete = 1;
-		FO_SetModel(self.owner, "progs/beta1/mcp_player.mdl");
+		FO_SetModel(self.owner, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
 		setsize (self.owner, VEC_HULL_MIN, VEC_HULL_MAX);
 		FO_Sound(self.owner, CHAN_ITEM, "beta1/uncloak.wav", 1, ATTN_NORM);
 		sprint(self.owner, PRINT_HIGH, "cloak removed.\n");
@@ -182,7 +182,7 @@ void SpawnTeleBall() =
 	newmis.classname = "teleball";
 	newmis.touch = teleball_touch;
 
-	FO_SetModel (newmis, "progs/beta1/mcp_teleball.mdl");
+	FO_SetModel (newmis, "progs/beta1/mcp_teleball.mdl", DIM_WORLD);
 	if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 	if(self.team_no == TEAM_RED)
@@ -288,6 +288,42 @@ float IsTeleBlocked(entity tb) =
 	
 };
 
+void Charge() =
+{
+
+	if(self.ammo_cells < 100)
+	{
+		stuffcmd(self, "play beta1/error.wav\n");
+		sprint(self, PRINT_HIGH, "insufficient energy, 100 needed.\n");
+		return;
+	}
+	self.ammo_cells = 0;
+	FO_Sound(self, CHAN_ITEM, "beta1/charge.wav", 1, ATTN_NORM);
+	
+	//makevectors (self.v_angle);
+        //self.velocity = v_forward * CHARGE_VELOCITY;
+
+	//makevectors (self.v_angle);
+	//newmis.velocity = v_forward;
+	//newmis.velocity = newmis.velocity * ROCKET_SPEED; //1000
+	
+        makevectors (self.v_angle);
+        local vector org = self.origin;
+	local vector targ = (org + '0 0 96') + (v_forward * 600);
+	local vector midpoint = ((targ + org) / 2) + '0 0 64';
+	local vector dir = normalize(midpoint - org);
+	self.velocity = dir * CHARGE_VELOCITY;
+      
+        /* FIEND
+                makevectors(self.v_angle);
+        self.velocity = aim(self, 1000);
+        
+        self.velocity_z = self.velocity_z * 1.2;
+        self.velocity = self.velocity * 1000;
+        self.angles = vectoangles(self.velocity);
+        */
+	
+};
 void Teleport2Ball () =
 {
 	local entity tb = world;
@@ -304,7 +340,8 @@ void Teleport2Ball () =
 		return;
 
 	
-	tracebox(tb.origin + '0 0 -32', VEC_HULL_MIN, VEC_HULL_MAX, tb.origin + '0 0 32', FALSE, tb);
+	//tracebox(tb.origin + '0 0 -32', VEC_HULL_MIN, VEC_HULL_MAX, tb.origin + '0 0 32', FALSE, tb);
+	tracebox(tb.origin, VEC_HULL_MIN, VEC_HULL_MAX, tb.origin, FALSE, tb);
 	if (trace_fraction != 1)
 	{
 		if (trace_ent.classname == "worldspawn")
@@ -448,7 +485,7 @@ void DropArmour() =
 	setorigin(newmis, self.origin);
 	setsize(newmis, '-16 -16 0', '16 16 56');
 	newmis.skin = 2;
-	FO_SetModel(newmis, "progs/armor.mdl");
+	FO_SetModel(newmis, "progs/armor.mdl", DIM_WORLD);
 	
     
 	if (self.v_angle_x) 
@@ -631,8 +668,8 @@ void LinkThink() =
 		return;
 	}
 	local vector temp;
-	temp = self.gren.origin - self.owner.origin;
-	setorigin (self,(self.owner.origin + (temp * self.bubble_count)));
+	temp = self.gren.origin - self.gren.owner.origin;
+	setorigin (self,(self.gren.owner.origin + (temp * self.bubble_count)));
 	self.angles = vectoangles(normalize(temp));
 };
 
@@ -671,7 +708,7 @@ void ThrowHarpoon() =
 		newmis.think = SUB_Remove;
 		newmis.classname = "harpoon";
 		FO_Sound(self, CHAN_ITEM, "beta1/harpoon_throw.wav", 1, ATTN_NORM);
-		FO_SetModel(newmis, "progs/beta1/mcp_harpoon.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_harpoon.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 			newmis.skin = 1;
 		if(self.team_no == TEAM_RED)
@@ -692,7 +729,7 @@ void ThrowHarpoon() =
 			newlink.owner = self;
 			newlink.think = LinkThink;
 			newlink.nextthink = time + 0.01;
-			FO_SetModel(newlink, "progs/beta1/mcp_nail.mdl");
+			FO_SetModel(newlink, "progs/beta1/mcp_nail.mdl", DIM_WORLD);
 			setsize (newlink, '0 0 0', '0 0 0');  
 			links = links - 1;
 			dist = dist + distincrement;
@@ -788,7 +825,7 @@ void ThrowC4() =
 	setsize(newmis, '-16 -16 0', '16 16 8');
 
 	
-	FO_SetModel(newmis, "progs/beta1/mcp_c4.mdl");
+	FO_SetModel(newmis, "progs/beta1/mcp_c4.mdl", DIM_WORLD);
 	if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 	else
@@ -810,6 +847,100 @@ void ThrowC4() =
 	newmis.angles = '90 0 0';
 };
 
+void Airblast() =
+{
+	if(self.ammo_cells < 100)
+	{
+		sprint(self, PRINT_HIGH, "insufficient cells, 100 needed.\n");
+		stuffcmd(self, "play beta1/error.wav\n");
+		return;
+	}
+	self.ammo_cells = 0;
+	
+	FO_Sound(self,CHAN_ITEM, "beta1/airblast_shoot.wav", 1, ATTN_NORM);
+	makevectors(self.v_angle);
+
+	traceline (self.origin + '0 0 16', self.origin + + '0 0 16' + v_forward * 2048, 0, self);		//using trace_endpos for projectiles
+	local vector targpos = self.origin + '0 0 16' + v_forward * 1000;					//using this for players
+	local vector targdir;
+	
+	//targvec = normalize(targvec - self.origin);
+	
+        local entity head = findradius(self.origin + (v_forward * (AIRBLAST_RADIUS/2)), AIRBLAST_RADIUS);
+      
+        while (head)
+	{
+
+		targdir = normalize(trace_endpos - head.origin);
+		 
+		if (head.classname == "player" && head != self)
+		{
+
+
+			local float push = vlen (self.origin + v_forward*32 - head.origin);
+			if(push > 170)
+				push = 170;
+
+			push = push/170;
+			push = 1 - push;
+			push = AIRBLAST_MAXPLAYERPUSH * push;
+			if(push < AIRBLAST_MINPLAYERPUSH)
+				push = AIRBLAST_MINPLAYERPUSH;
+			
+			//if(distance < mindistance)
+			//	distance = mindistance;
+			//if (distance > maxdistance)
+			//	distance = maxdistance;
+			//distance = distance - mindistance;
+			//bprint(2,strcat(ftos(dist),"dust\n"));
+			
+			head.velocity = normalize(targpos - head.origin) * push;
+			//head.velocity = head.velocity + '0 0 32';
+		}
+		
+		
+		
+		else if (head.classname == "teleball")
+		{
+			head.velocity = targdir * vlen(head.velocity);
+			head.angles = vectoangles(head.velocity);
+		}
+		else if (head.classname == "rocket" || head.classname == "throwngrenade" || head.classname == "nail" || head.classname == "c4" || head.classname == "clusterbig" || head.classname == "clustermini" || head.classname == "harpoon")
+		{
+			//local entity targent = spawn();
+			//FO_SetModel(targent, "progs/beta1/mcp_teleball.mdl");
+			//setorigin(targent, trace_endpos);
+			//targent.nextthink = time + 2;
+			//targent.think = SUB_Remove;
+			head.gren = head.owner;
+			
+			if(head.owner.team_no != self.team_no)
+			{
+				head.owner = self;
+				if(self.team_no == TEAM_BLUE)
+					head.skin = 1;
+				else
+					head.skin = 2;
+				
+				if(head.classname == "c4")
+				{
+					FO_Sound(head, CHAN_ITEM, "beta1/c4_armed.wav", 1, ATTN_NORM);
+					stuffcmd(head.owner, "play beta1/c4_armed.wav\n");
+					
+					head.think = C4_Explode;
+					head.nextthink = time+1;	
+				}
+				
+			}
+				
+			
+			head.velocity = targdir * vlen(head.velocity);
+			head.angles = vectoangles(head.velocity);
+		}
+		head = head.chain;
+	}
+
+};
 void C4Skill() =
 {
 	local entity c4e = world;
@@ -873,6 +1004,10 @@ void W_SpecialSkill() =
 	{
 		TeleSkill();
 	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		Charge();
+	}
 	return;
 };
 void RegenHealthArmour() =
@@ -925,6 +1060,27 @@ void RegenHealthArmour() =
 				self.armorvalue = ARMOUR_MAX_BOMBER;
 		}
 	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		if(self.armorvalue  < ARMOUR_MAX_MGUNNER || self.health < 100)
+		{
+			if(infokey(self, "regensound") != "0")
+				stuffcmd(self, "play beta1/regenhealtharmour.wav\n");
+		}
+		if(self.health < 100)
+		{
+			self.health = self.health + 2;
+			
+			if(self.health > 100)
+				self.health = 100;
+		}
+		if(self.armorvalue < ARMOUR_MAX_MGUNNER)
+		{
+			self.armorvalue = self.armorvalue + 2;
+			if(self.armorvalue > ARMOUR_MAX_MGUNNER)
+				self.armorvalue = ARMOUR_MAX_MGUNNER;
+		}
+	}
 };
 
 void RegenCells() =
@@ -960,7 +1116,7 @@ void RegenCells() =
 	if(self.role == ROLE_SUPPORT)
 	{
 		self.next_cellregen = time + 1;
-		self.ammo_cells = self.ammo_cells + 5;
+		self.ammo_cells = self.ammo_cells + 10;
 		if(self.ammo_cells >= 100)
 		{
 			self.ammo_cells = 100;
@@ -985,6 +1141,17 @@ void RegenCells() =
 		{
 			self.ammo_cells = 100;
 			stuffcmd(self, "play beta1/specialready_bomber.wav\n");
+		}
+	}
+	
+	if(self.role == ROLE_MGUNNER)
+	{
+		self.next_cellregen = time + 1;
+		self.ammo_cells = self.ammo_cells + 10;
+		if(self.ammo_cells >= 100)
+		{
+			self.ammo_cells = 100;
+			stuffcmd(self, "play beta1/chargeready.wav\n");
 		}
 	}
 };
@@ -1032,3 +1199,5 @@ void (entity pe_player, float f_type) AutoIdentify = {
 
     }
 };
+
+

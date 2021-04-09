@@ -2,7 +2,9 @@
 void() respawn =
 {
 	// make a copy of the dead body for appearances sake
-	CopyToBodyQue (self);
+	//CopyToBodyQue (self);
+	CreateCorpse(self);
+	
 	// set default spawn parms
 	SetNewParms ();
 	// respawn              

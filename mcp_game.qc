@@ -105,7 +105,7 @@ void info_mcp_classinfo() =
 {
 		local entity sp = spawn();
 		sp.classname = "sprite_classinfo";		
-		FO_SetModel(sp,"progs/beta1/s_mcp.spr");
+		FO_SetModel(sp,"progs/beta1/s_mcp.spr", DIM_WORLD);
 		setorigin(sp,self.origin + '0 0 16');
 		sp.solid = SOLID_TRIGGER;
 		sp.touch = sprite_touch;
@@ -129,7 +129,7 @@ void info_player_teamspawn() =
 {
 		local entity sp = spawn();
 		sp.classname = "sprite_playerspawn";		
-		FO_SetModel(sp,"progs/beta1/s_mcp.spr");
+		FO_SetModel(sp,"progs/beta1/s_mcp.spr", DIM_WORLD);
 		setorigin(sp,self.origin + '0 0 0');
 		sp.solid = SOLID_TRIGGER;
 		sp.touch = sprite_touch;
@@ -146,7 +146,7 @@ void info_mcpflag_spawn () =
 {
 		local entity sp = spawn();
 		sp.classname = "sprite_flagspawn";		
-		FO_SetModel(sp,"progs/beta1/s_mcp.spr");
+		FO_SetModel(sp,"progs/beta1/s_mcp.spr", DIM_WORLD);
 		setorigin(sp,self.origin + '0 0 32');
 		sp.solid = SOLID_TRIGGER;
 		sp.touch = sprite_touch;
@@ -163,7 +163,7 @@ void info_mcpflag_capture () =
 	
 	local entity te = spawn();
 	te.classname = "sprite_cappoint";
-	FO_SetModel(te,"progs/beta1/s_mcp.spr");
+	FO_SetModel(te,"progs/beta1/s_mcp.spr", DIM_WORLD);
 	te.team_no = self.team_no;
 	if (self.team_no == TEAM_BLUE)
 		te.frame =  SPRITE_BLUECAP;
@@ -196,9 +196,25 @@ void ThrowMCPFlag () =
 		return;
 	if(mcpflag.owner != self)
 		return;
-		
+	
 	ChangeMCPFlagState(MCPFLAGSTATE_THROWN, self);
 	self.items = self.items - (self.items & IT_KEY1);
+	
+	makevectors (self.v_angle);
+	mcpflag.velocity_z = 400;
+	mcpflag.velocity_x = -50 + (random() * 100);
+	mcpflag.velocity_y = -50 + (random() * 100);
+	if (self.v_angle_x < 25) 
+	{
+		mcpflag.velocity = (v_forward * FLAG_TOSSSPEED) + (v_up * 200); //400
+	} 
+	else 
+	{
+		mcpflag.velocity = aim(self, 10000);
+		mcpflag.velocity = mcpflag.velocity * FLAG_TOSSSPEED; //400
+		mcpflag.velocity_z = 200;
+	}
+
 };
 
 void mcpflagcap_touch() =
@@ -235,12 +251,8 @@ void CreateMCPFlag() =
 		mcpflag = spawn();
 		mcpflag.classname = "item_mcpflag";
 		mcpflag.owner = gm;		
-		mcpflag.solid = SOLID_NOT;
-		mcpflag.touch = SUB_Null;
-		mcpflag.think = SUB_Null;
 		mcpflag.nextthink = time + 1;
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl");
-		mcpflag.skin = 0;
+
 		setsize(mcpflag, VEC_HULL_MIN, VEC_HULL_MAX);
 		ChangeMCPFlagState(MCPFLAGSTATE_RESET, gm);
 };
@@ -338,18 +350,47 @@ void mcpflag_capped() =
 
 void mcpflag_loose() =
 {
-	self.touch = mcpflag_touch;
+	
+	if(self.touch != mcpflag_touch)
+		self.touch = mcpflag_touch;
+		
 	self.nextthink = time + 1;
-	if(time > self.cnt)
+	
+	if(self.cnt == 0)
+	{
+		ChangeMCPFlagState(MCPFLAGSTATE_RESET, gm);
+		return;
+	}
+	
+	if(self.cnt == 10 || self.cnt <= 5 && self.cnt > 0)
+	{
+		if(self.cnt == 1)
+			bprint(2, strcat("flag returning in \s[\s",ftos(self.cnt),"\s]\s second.\n"));
+		else
+			bprint(2, strcat("flag returning in \s[\s",ftos(self.cnt),"\s]\s seconds.\n"));
+			
+		local entity p = find(world, classname, "player");
+		while (p != world) 
 		{
-			ChangeMCPFlagState(MCPFLAGSTATE_RESET, gm);
-			return;
+			if (p.netname != "") 
+			{
+				stuffcmd(p, strcat("play misc/menu2.wav\n"));
+			}
+			p = find(p, classname, "player");
 		}
-	local float pos = pointcontents(self.origin);
+
+	}
+	
+	self.cnt = self.cnt - 1;
+	
+	// look hurt_touch() for returning flag in maps like xpress3
+	local float pos = pointcontents(mcpflag.origin);
 	if(pos == CONTENT_SKY || pos == CONTENT_LAVA)
 	{
-		self.cnt = time;
+		if(self.cnt > 5)
+			self.cnt = 5;
 	}
+	
 };
 
 void flagtrail_touch() =
@@ -363,7 +404,7 @@ void flagtrail_touch() =
 				FO_Sound(self, CHAN_ITEM, "beta1/pacman.wav", 1, ATTN_NORM);
 				mcpflag.heat = time + 0.35;
 			}
-			if(other.health < 99)
+			if(other.health < 100)
 				other.health = other.health + 1;
 			remove(self);
 		}
@@ -373,7 +414,7 @@ void flagtrail_touch() =
 void SpawnFlagTrail() =
 {
 	local entity trail = spawn();
-	FO_SetModel(trail, "progs/beta1/mcp_flagtrail.spr");
+	FO_SetModel(trail, "progs/beta1/mcp_flagtrail.spr", DIM_WORLD);
 	setorigin (trail,mcpflag.owner.origin);
 	trail.movetype = MOVETYPE_NONE;
 	trail.solid = SOLID_TRIGGER;
@@ -407,12 +448,13 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 {
 	if (mcpflag.playerstate == zfstate)
 		return;
-	
+
 	if(zfstate == MCPFLAGSTATE_RESET)
 	{
 		SoundTeam (TEAM_RED, world, "beta1/flagevent.wav");
 		SoundTeam (TEAM_BLUE, world, "beta1/flagevent.wav");
 		bprint(2, "\sthe flag has spawned!\s\n");
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
 		setorigin(mcpflag,mcpflagspawn.origin);
 		spawn_tfog(mcpflagspawn.origin);
 		mcpflag.owner = gm;
@@ -452,20 +494,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		bprint(2, strcat(mcpflag.owner.netname, " \shas thrown the flag!\s\n"));
 		
 		
-		mcpflag.velocity_z = 400;
-		mcpflag.velocity_x = -50 + (random() * 100);
-		mcpflag.velocity_y = -50 + (random() * 100);
-		if (o.v_angle_x < 25) 
-		{
-			mcpflag.velocity = (v_forward * FLAG_TOSSSPEED) + (v_up * 200); //400
-		} 
-		else 
-		{
-			mcpflag.velocity = aim(o, 10000);
-			mcpflag.velocity = mcpflag.velocity * FLAG_TOSSSPEED; //400
-			mcpflag.velocity_z = 200;
-		}
-		
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
 		mcpflag.angles = '0 0 0';
 		mcpflag.owner = gm;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
@@ -474,9 +503,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		mcpflag.touch = SUB_Null;
 		mcpflag.think = mcpflag_loose;	//changes touch to give a buffer
 		mcpflag.nextthink = time + 1;
-		mcpflag.cnt = time + FLAG_RESET;
-		
-
+		mcpflag.cnt = FLAG_RESET;
 	}	
 	if(zfstate == MCPFLAGSTATE_DROPPED)
 	{
@@ -502,7 +529,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		mcpflag.owner = gm;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
 		
-
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
 		mcpflag.origin = o.origin;
 
 		mcpflag.velocity_z = 300;
@@ -516,8 +543,8 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		mcpflag.touch = SUB_Null;
 		mcpflag.think = mcpflag_loose; //changes touch to give a buffer
 		mcpflag.nextthink = time + 1; 
-		mcpflag.cnt = time + FLAG_RESET;
-		makevectors(v_up);
+		mcpflag.cnt = FLAG_RESET;
+
 	
 	}
 	if(zfstate == MCPFLAGSTATE_CARRIED)
@@ -546,14 +573,15 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		mcpflag.owner = o;
 		local vector org = o.origin + '-15 0 0';
 		setorigin (mcpflag, org);
-		
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
 		mcpflag.view_ofs = mcpflag.origin - o.origin;
 		o.items = o.items | IT_KEY1;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
 		
 		mcpflag.movetype = MOVETYPE_FOLLOW;
 		mcpflag.aiment = o;
-		mcpflag.solid = SOLID_NOT;
+		//mcpflag.solid = SOLID_NOT;
+		mcpflag.solid = SOLID_TRIGGER;
 			
 		mcpflag.touch = SUB_Null;
 		mcpflag.think = mcpflag_carried;
@@ -590,7 +618,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		
 		mcpflag.owner = o;
 		mcpflag.angles = '0 0 0';
-		
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
 		setorigin(mcpflag,o.origin);
 		spawn_tfog(o.origin);	
 		
@@ -673,48 +701,55 @@ void gm_think_live() =
 	}
 	self.nextthink = time + 1;
 
+	
 	if(self.bubble_count >= 0)
 		self.bubble_count = self.bubble_count - 1;
 		
 
-		if(self.bubble_count <= 10 && self.bubble_count > 0)
-		{
-			local entity p = find(world, classname, "player");
-			while (p != world) 
-			{
-				
-				if (p.netname != "") 
-				{
-					local string n = ftos(self.bubble_count);
-					stuffcmd(p, strcat("play misc/menu2.wav\n"));
-				}
-				p = find(p, classname, "player");
-				
-				local entity fs;				
-				fs = find(world, classname, "sprite_flagspawn");
-				while (fs != world) 
-				{
-					fs.frame = self.bubble_count;
-					fs = find(fs, classname, "sprite_flagspawn");
-				}
-			}
-		}
-
+	if(self.bubble_count <= 10 && self.bubble_count >= 0)
+	{
+			
+			
 		if (self.bubble_count == 1)
 			bprint(2, strcat("flag spawning in \s[\s",ftos(self.bubble_count),"\s]\s second.\n"));
 		else if (self.bubble_count > 0 && self.bubble_count <= 10)
 			bprint(2, strcat("flag spawning in \s[\s",ftos(self.bubble_count),"\s]\s seconds.\n"));
+			
+		local entity p = find(world, classname, "player");
+		while (p != world) 
+		{
+			if (p.netname != "") 
+			{
+				local string n = ftos(self.bubble_count);
+				stuffcmd(p, strcat("play misc/menu2.wav\n"));
+			}
+			p = find(p, classname, "player");
+				
+
+		}
+
+							
+		local entity fs = find(world, classname, "sprite_flagspawn");
+		while (fs != world) 
+		{
+			fs.frame = self.bubble_count;
+			fs = find(fs, classname, "sprite_flagspawn");
+		}
+	}
+
 
 	if(self.bubble_count == 0)
 	{
-		fs = find(world, classname, "sprite_flagspawn");
-		while (fs != world) 
+		local entity fs2;
+		fs2 = find(world, classname, "sprite_flagspawn");
+		while (fs2 != world) 
 		{
-			remove(fs);
-			fs = find(fs, classname, "sprite_flagspawn");
+			remove(fs2);
+			fs2 = find(fs2, classname, "sprite_flagspawn");
 		}
 		CreateMCPFlag();
 	}
+	
 	if(matchstate == MATCHSTATE_FINISH)
 	{
 		self.think = gm_think_finish;
@@ -823,7 +858,7 @@ void gm_think_waitforplayers() =
 	if(totalplayers == 0)
 		return;
 		
-	if(readyplayers == totalplayers || forcestarters > (totalplayers/2))
+	if(readyplayers == totalplayers || forcestarters >= (totalplayers/2))
 	{
 		matchstate = MATCHSTATE_COUNTDOWN;
 		self.think = gm_think_countdown;
@@ -1036,6 +1071,7 @@ void CreateGameManager() =
 	role_fighter_max 	= GetInfo(world, "role_fighter_max", "9");
 	role_bomber_max 	= GetInfo(world, "role_bomber_max", "9");
 	role_support_max 	= GetInfo(world, "role_support_max", "9");
+	role_mgunner_max	= GetInfo(world, "role_mgunner_max", "9");
 	
 };
 

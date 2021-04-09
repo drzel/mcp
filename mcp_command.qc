@@ -210,7 +210,7 @@ void InvInfo() =
 		
 	if(self.role == ROLE_RECON)
 	{
-		sprint(self, PRINT_HIGH, strcat(ftos(self.grencount)," airblast grenades\n"));	
+		sprint(self, PRINT_HIGH, strcat(ftos(self.grencount)," shatter grenades\n"));	
 	}
 	if(self.role == ROLE_ASSASSIN)
 	{
@@ -470,6 +470,25 @@ void ChangeRole(float r) =
 		stuffcmd(self, "play beta1/error.wav\n");
 		return;
 	}
+	
+	if(r == ROLE_MGUNNER)
+	{
+		if( GetRoleCount(ROLE_MGUNNER, self.team_no) < role_mgunner_max )
+		{
+			self.nextrole = ROLE_MGUNNER;
+			ShowMenu(MENU_NONE);
+			if(self.role == ROLE_NONE)
+			{	
+				respawn();
+				return;
+			}
+			sprint(self, PRINT_HIGH, "you will respawn as a minigunner.\n");
+			return;
+		}
+		sprint(self, PRINT_HIGH, "too many of that class already.\n");
+		stuffcmd(self, "play beta1/error.wav\n");
+		return;
+	}
 };
 
 void CreateAlias(entity e, string s, float imp) =
@@ -535,6 +554,15 @@ void SetAliases2(entity e) =
 	CreateAlias(e,"-gren", IMP_THROWGREN);
 	CreateAlias(e,"+gren2", IMP_PRIMEGREN);
 	CreateAlias(e,"-gren2", IMP_THROWGREN);
+	
+	
+	CreateAlias(e,"primeone", IMP_PRIMEGREN);
+	CreateAlias(e,"primetwo", IMP_PRIMEGREN);
+	CreateAlias(e,"primegren", IMP_PRIMEGREN);
+	CreateAlias(e,"throwgren", IMP_THROWGREN);
+	CreateAlias(e,"gren1", IMP_2TAPGREN);
+	CreateAlias(e,"gren2", IMP_2TAPGREN);
+	CreateAlias(e,"pingmap", IMP_CREATEPING);
 };
 
 void SetAliases1(entity e) =
@@ -559,21 +587,18 @@ void SetAliases1(entity e) =
 	CreateAlias(e,"fighter", IMP_GOFIGHTER);
 	CreateAlias(e,"bomber", IMP_GOBOMBER);
 	CreateAlias(e,"support", IMP_GOSUPPORT);
+	CreateAlias(e,"minigunner", IMP_GOMGUNNER);
+	
 	CreateAlias(e,"scout", IMP_GORECON);
 	CreateAlias(e,"sniper", IMP_GOASSASSIN);
 	CreateAlias(e,"soldier", IMP_GOFIGHTER);
 	CreateAlias(e,"demoman", IMP_GOBOMBER);
 	CreateAlias(e,"medic", IMP_GOSUPPORT);
+	CreateAlias(e,"hwguy", IMP_GOMGUNNER);
 	
 	CreateAlias(e,"ready", IMP_PLAYER_READY);
 	CreateAlias(e,"forcestart", IMP_PLAYER_FORCESTART);
 
-	CreateAlias(e,"primeone", IMP_PRIMEGREN);
-	CreateAlias(e,"primetwo", IMP_PRIMEGREN);
-	CreateAlias(e,"primegren", IMP_PRIMEGREN);
-	CreateAlias(e,"throwgren", IMP_THROWGREN);
-	CreateAlias(e,"gren1", IMP_2TAPGREN);
-	CreateAlias(e,"gren2", IMP_2TAPGREN);
 	
 	CreateAlias(e,"inv", IMP_INV);
 	CreateAlias(e,"flaginfo", IMP_FLAGINFO);

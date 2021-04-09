@@ -100,7 +100,7 @@ void() PlayerPreThink =
 {
 	local   float   mspeed, aspeed;
 	local   float   r;
-
+	
 	if (intermission_running)
 	{
 		IntermissionThink ();   // otherwise a button could be missed between
@@ -171,10 +171,10 @@ void() PlayerPostThink =
 		return;
 	//bprint(2,strcat(ftos(self.v_angle_x),"dirgg\n"));
 // check to see if player landed and play landing sound 
-	if ((self.jump_flag < -20) && (self.flags & FL_ONGROUND) )
-	{
-			GoombaStomp();
-	}
+	//if ((self.jump_flag < -20) && (self.flags & FL_ONGROUND) )
+	//{
+	//		GoombaStomp();
+	//}
 	if ((self.jump_flag < -300) && (self.flags & FL_ONGROUND) )
 	{
 		if (self.watertype == CONTENT_WATER)
@@ -205,7 +205,7 @@ void() PlayerPostThink =
 	RegenHealthArmour();
 	CPrintRefresh();
 	
-
+	
 };
 
 

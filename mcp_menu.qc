@@ -168,6 +168,24 @@ void(float imp) MenuInput =
 			}
 			sprint(self, PRINT_HIGH, s_fullrole);
 		}
+		if(imp == 6)
+		{
+			if( GetRoleCount(ROLE_MGUNNER, self.team_no) < role_mgunner_max )
+			{
+				self.nextrole = ROLE_MGUNNER;
+				ShowMenu(MENU_NONE);
+				if(self.role == ROLE_NONE)
+				{	
+					respawn();
+					return;
+				}
+				sprint(self, PRINT_HIGH, "you will respawn as a minigunner.\n");
+				return;
+
+
+			}
+			sprint(self, PRINT_HIGH, s_fullrole);
+		}
 
 	}
 };
@@ -183,7 +201,8 @@ string MenuString(float menuType)
 	//local string s_endline120	="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 	local string s_space		= " ";
 	
-	local string line1, line2, line3, line4, line5, line6, line7, line8;
+	local string line1, line2, line3, line4, line5, line6, line7, line8; 
+	local string line9;
 
 	
 	if (menuType == MENU_SELECTTEAM)
@@ -234,11 +253,14 @@ string MenuString(float menuType)
 		local float currfighter		= GetRoleCount(ROLE_FIGHTER, self.owner.team_no);	
 		local float currbomber		= GetRoleCount(ROLE_BOMBER, self.owner.team_no);	
 		local float currsupport		= GetRoleCount(ROLE_SUPPORT, self.owner.team_no);
+		local float currmgunner 	= GetRoleCount(ROLE_MGUNNER, self.owner.team_no);
+		
 		local float maxrecon		= role_recon_max;
 		local float maxassassin		= role_assassin_max;
 		local float maxfighter 		= role_fighter_max;
 		local float maxbomber 		= role_bomber_max;
-		local float maxsupport		= role_support_max;	
+		local float maxsupport		= role_support_max;
+		local float maxmgunner		= role_mgunner_max;	
 
 
 		local string s_recon		= "\s[1]\s recon";
@@ -246,12 +268,14 @@ string MenuString(float menuType)
 		local string s_fighter		= "\s[3]\s fighter";
 		local string s_bomber		= "\s[4]\s bomber";
 		local string s_support		= "\s[5]\s support";
+		local string s_mgunner		= "\s[6]\s minigunner";
 		
 		local string s_reconcount	= RoleCountToString(currrecon, maxrecon);
 		local string s_assassincount	= RoleCountToString(currassassin, maxassassin);
 		local string s_fightercount	= RoleCountToString(currfighter, maxfighter);
 		local string s_bombercount	= RoleCountToString(currbomber, maxbomber);
 		local string s_supportcount	= RoleCountToString(currsupport, maxsupport);
+		local string s_mgunnercount	= RoleCountToString(currmgunner,maxmgunner);
 		
 		line1		= strcat(s_selectrole, s_endline);
 		line2		= strcat(s_endline,s_endline);
@@ -260,7 +284,8 @@ string MenuString(float menuType)
 		line5		= strcat(s_fighter,	GenSpace((strlen(s_fighter)+strlen(s_fightercount)),	desLength), 	s_fightercount, 	s_endline);
 		line6		= strcat(s_bomber,	GenSpace((strlen(s_bomber)+strlen(s_bombercount)),	desLength), 	s_bombercount, 		s_endline);
 		line7 		= strcat(s_support,	GenSpace((strlen(s_support)+strlen(s_supportcount)),	desLength), 	s_supportcount, 	s_endline);
-		line8 		= s_endline;
+		line8 		= strcat(s_mgunner,	GenSpace((strlen(s_mgunner)+strlen(s_mgunnercount)),	desLength), 	s_mgunnercount, 	s_endline);
+		line9 		= s_endline;
 		
 		returnstring = strcat(line1, line2, line3,line4,line5,line6,line7,line8);
 		return returnstring;

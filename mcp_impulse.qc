@@ -48,7 +48,7 @@ void(vector org, vector vel) SpawnMeatSpray =
 	missile.nextthink = time + 1;
 	missile.think = SUB_Remove;
 
-	FO_SetModel (missile, "progs/zom_gib.mdl");
+	FO_SetModel (missile, "progs/zom_gib.mdl", DIM_WORLD);
 	setsize (missile, '0 0 0', '0 0 0');            
 	setorigin (missile, org);
 };
@@ -210,7 +210,7 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 
 	ClearMultiDamage ();
 
-	traceline (src, src + dir*2048, FALSE, self);
+	traceline (src, src + dir*3000, FALSE, self);	//2048
 	ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
 	
 	puff_org = trace_endpos - dir*4;
@@ -255,6 +255,7 @@ void() T_MissileTouch =
 		remove(self);
 		return;
 	}
+	
 
 	damg = 90 + random()*20;
 	
@@ -281,9 +282,11 @@ void() T_MissileTouch =
 			T_Damage (other, self, self.owner, damg * 4 );
 		}
 		else
-		{
-			other.deathtype = "rocket_direct";
-			T_Damage (other, self, self.owner, damg );
+		{	
+
+				other.deathtype = "rocket_direct";
+				T_Damage (other, self, self.owner, damg );
+	
 		}
 	}
 
@@ -291,7 +294,9 @@ void() T_MissileTouch =
 	// was done in the impact
 
 
-	T_RadiusDamage (self, self.owner, 90, other, "rocket");
+		T_RadiusDamage (self, self.owner, 90, other, "rocket");
+
+		
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 //  FO_Sound (self, CHAN_WEAPON, "weapons/r_exp3.wav", 1, ATTN_NORM);
@@ -503,7 +508,7 @@ void() ClusterMiniExplode =
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_AOE, world, "clustermini_aoe");
+		T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_AOE, world, "clustermini_aoe");
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
@@ -523,7 +528,7 @@ void() ClusterBigDirectExplode =
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct");
+		T_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct");
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
@@ -544,6 +549,7 @@ void() ClusterMiniDirectExplode =
 	self.voided = 1;
 
 	T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_DIRECT, world, "clustermini_direct");
+	
 	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
@@ -699,8 +705,10 @@ local float rand;
 	if (other.takedamage)
 	{
 		spawn_touchblood (9);
-		other.deathtype = "nail";
-		T_Damage (other, self, self.owner, 9);
+
+			other.deathtype = "nail";
+			T_Damage (other, self, self.owner, 9);
+		
 	}
 	else
 	{
@@ -821,7 +829,10 @@ void() DeadOrAliveImpulses =
 	}
 	if (self.impulse == IMP_CHANGEROLE)
 		ChangeRoleMenu();
-		
+	
+	if(self.impulse == IMP_CREATEPING)
+		CreatePingPoint();
+	
 	if (self.impulse == IMP_NULL)	//using this for tf aliases to stop unknown command spam ie. discard, flaginfo
 	{
 		self.impulse = 0;
@@ -857,6 +868,9 @@ void() DeadOrAliveImpulses =
 		
 	if(self.impulse == IMP_GOSUPPORT)
 		ChangeRole(ROLE_SUPPORT);
+		
+	if(self.impulse == IMP_GOMGUNNER)
+		ChangeRole(ROLE_MGUNNER);
 		
 	if(self.impulse == IMP_QSHOT1_START)
 		StartQuickShot(1);
@@ -901,6 +915,23 @@ void() AliveImpulses =
 	if(self.impulse == IMP_PRIMEGREN)
 		PrimeGrenade();
 		
+	if (self.impulse == IMP_RELOAD && VisualWeapon() == WPN_MINIGUN)
+	{
+
+		self.impulse = 0;
+		
+		if(self.clip_curr_primary >= CLIP_MAX_MINIGUN)
+			return;
+			
+		if(self.minigunstate != MINIGUNSTATE_NONE)
+		{
+			self.mgun_queuereload = 1;
+			return;
+		}
+		
+		ReloadWeapon(WPN_MINIGUN);
+	}
+		
 };
 
 void() AliveAttackFinishedImpulses = 
@@ -914,7 +945,16 @@ void() AliveAttackFinishedImpulses =
 	if (self.impulse == IMP_KEYBOARD4)
 		W_ZutChangeWeapon (self.impulse);
 	if (self.impulse == IMP_RELOAD)
+	{	
+	
+		if(VisualWeapon() == WPN_MINIGUN || self.isreloading == 1)
+		{
+			self.impulse = 0;
+			return;
+		}
+			
 		ReloadWeapon(VisualWeapon());
+	}
 	if(self.impulse == IMP_RELOADNEXT)
 		ReloadNext();
 	if(self.impulse == IMP_NEXTWEAPON)

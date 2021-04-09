@@ -42,6 +42,8 @@ void(entity targ, entity attacker) ClientObituary =
 			{
 				bprint (PRINT_MEDIUM," was telefragged by ");
 				KillStreak(attacker.owner);
+				SoundTeam (TEAM_RED, world, "beta1/insideout.wav");
+				SoundTeam (TEAM_BLUE, world, "beta1/insideout.wav");
 			}
 				
 			bprint (PRINT_MEDIUM,attacker.owner.netname);
@@ -244,7 +246,8 @@ void(entity targ, entity attacker) ClientObituary =
 					SoundTeam (TEAM_RED, world, "beta1/voice_combowhore.wav");
 					SoundTeam (TEAM_BLUE, world, "beta1/voice_combowhore.wav");
 				}
-				else if (targ.deathtype == "sticky_trap")
+
+				/*else if (targ.deathtype == "sticky_trap")
 				{
 					deathstring = " is caught by ";
 					deathstring2 = "'s sticky trap\n" ;
@@ -255,37 +258,55 @@ void(entity targ, entity attacker) ClientObituary =
 					deathstring = " caught a direct sticky from ";
 					deathstring2 = "\n" ;
 				
-				}
+				}*/
 				else if (targ.deathtype == "clusterbig_direct")
 				{
 					deathstring = " caught a direct pineapple from ";
 					deathstring2 = "\n" ;
-				
+
 				}
+				else if (targ.deathtype == "shouldercharge")
+				{
+					deathstring = " was shoulder charged by ";
+					deathstring2 = "\n" ;
+					SoundTeam (TEAM_RED, world, "beta1/thomas.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/thomas.wav");
+
+				}
+
 				else if (targ.deathtype == "clustermini_direct")
 				{
-					deathstring = " caught a pineapple from ";
+					deathstring = " caught a direct mini-pineapple from ";
 					deathstring2 = "\n" ;
 				
 				}
+
 				else if (targ.deathtype == "clustermini_aoe")
 				{
 					deathstring = " succumbed to ";
-					deathstring2 = "'s pineapple spam\n" ;
+					deathstring2 = "'s mini-pineapple spam\n" ;
 				
 				}
+
+
 				else if (targ.deathtype == "grenade_leech")
 				{
 					deathstring = " was sucked dry by ";
 					deathstring2 = "'s leech grenade\n" ;
 				
 				}
+
 				else if (targ.deathtype == "grenade_frag")
 				{
 					deathstring = " played catch with ";
 					deathstring2 = "'s frag grenade\n" ;
 				
 				}
+
+				
+				
+				
+				
 				else if (targ.deathtype == "grenade_flash")
 				{
 					deathstring = " is charred by ";
@@ -293,7 +314,8 @@ void(entity targ, entity attacker) ClientObituary =
 					SoundTeam (TEAM_RED, world, "beta1/toasty.wav");
 					SoundTeam (TEAM_BLUE, world, "beta1/toasty.wav");
 				}
-				else if (targ.deathtype == "grenade_bigproxy")
+
+				/*else if (targ.deathtype == "grenade_bigproxy")
 				{
 					deathstring = " couldnt outrun ";
 					deathstring2 = "'s proxy grenade\n" ;
@@ -304,7 +326,7 @@ void(entity targ, entity attacker) ClientObituary =
 					deathstring = " got too close to ";
 					deathstring2 = "'s proxy grenade\n" ;
 				
-				}
+				}*/
 				else if (targ.deathtype == "goomba_stomp")
 				{
 					deathstring = " was goomba stomped by ";
@@ -349,6 +371,12 @@ void(entity targ, entity attacker) ClientObituary =
 				{
 					deathstring = " was railed by ";
 					deathstring2 = "\n";
+				}
+				else if (rnum == WPN_MINIGUN)
+				{
+					
+					deathstring = " was gunned down by ";
+					deathstring2 = "'s minigun\n";
 				}
 				bprint (PRINT_MEDIUM,targ.netname);
 				bprint (PRINT_MEDIUM,deathstring);

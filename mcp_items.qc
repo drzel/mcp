@@ -137,6 +137,8 @@ void () ArmourShard_Touch = {
 		maxarm = ARMOUR_MAX_BOMBER;
 	if(other.role == ROLE_SUPPORT)
 		maxarm = ARMOUR_MAX_SUPPORT;
+	if(other.role == ROLE_MGUNNER)
+		maxarm = ARMOUR_MAX_MGUNNER;
 		
 	if(other.armorvalue < maxarm)
 	{
@@ -179,7 +181,7 @@ void () DropArmourShard = {
     newmis.flags = FL_ITEM;
     newmis.solid = SOLID_TRIGGER;
     newmis.movetype = MOVETYPE_TOSS;
-    FO_SetModel(newmis, "progs/beta1/mcp_armourshard.mdl");
+    FO_SetModel(newmis, "progs/beta1/mcp_armourshard.mdl", DIM_WORLD);
     setsize(newmis, '-16 -16 0', '16 16 56');
     newmis.touch = ArmourShard_Touch;
     newmis.classname = "armourshard";
@@ -200,7 +202,7 @@ void () DropHealthPack = {
     newmis.flags = FL_ITEM;
     newmis.solid = SOLID_TRIGGER;
     newmis.movetype = MOVETYPE_TOSS;
-    FO_SetModel(newmis, "progs/beta1/mcp_healthpack.mdl");
+    FO_SetModel(newmis, "progs/beta1/mcp_healthpack.mdl", DIM_WORLD);
     setsize(newmis, '-16 -16 0', '16 16 56');
     newmis.touch = HealthPack_Touch;
     newmis.classname = "healthpack";
@@ -223,7 +225,7 @@ void () DropGrenPack = {
     newmis.flags = FL_ITEM;
     newmis.solid = SOLID_TRIGGER;
     newmis.movetype = MOVETYPE_TOSS;
-    FO_SetModel(newmis, "progs/backpack.mdl");
+    FO_SetModel(newmis, "progs/backpack.mdl", DIM_WORLD);
     setsize(newmis, '-16 -16 0', '16 16 56');
     newmis.touch = GrenPackTouch;
     newmis.classname = "grenpack";

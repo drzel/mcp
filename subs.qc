@@ -209,19 +209,25 @@ match (string)self.target and call their .use function
 
 ==============================
 */
-void FO_SetModel(entity e, string fomdl) =
+void FO_SetModel(entity e, string fomdl, float dimension) =
 {
     //e.dimension_seen = e.dimension_seen - (e.dimension_seen & DMN_FLASH);
-    e.dimension_seen = DMN_NOFLASH;
+    e.dimension_seen = dimension;
     setmodel(e, fomdl);
 };
 
-
+void oldFO_SetModel(entity e, string fomdl) =
+{
+    ////e.dimension_seen = e.dimension_seen - (e.dimension_seen & DMN_FLASH); //leave uncommented
+    //e.dimension_seen = DMN_NOFLASH;
+    //setmodel(e, fomdl);
+};
 void FO_Sound(entity e, float chan, string samp, float vol, float atten) =
 {
     float olddimens = e.dimension_seen;
     // make the sound go to no flash, so it isn't heard by those that are flashed
-    e.dimension_seen = DMN_NOFLASH;
+   //e.dimension_seen = DMN_NOFLASH;
+   e.dimension_seen = DIM_WORLD;
     sound(e, chan, samp, vol, atten);
     e.dimension_seen = olddimens;
 };

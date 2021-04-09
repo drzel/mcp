@@ -104,6 +104,27 @@ void ReloadThink_Nailgun() =
 	}
 };
 
+void ReloadThink_Minigun() =
+{
+	stuffcmd(self.owner, "play beta1/reload_minigun.wav\n");
+	self.owner.clip_curr_primary = self.owner.clip_curr_primary + 1;
+	//self.owner.currentammo = self.owner.clip_curr_primary;
+	ChangeHudAmmo(self.owner,WPN_MINIGUN);
+	//self.owner.items = self.owner.items - ( self.owner.items & ( IT_SHELLS | IT_NAILS | IT_ROCKETS | IT_CELLS) );
+	//self.owner.items = self.owner.items | IT_SHELLS;
+	
+	self.nextthink = time + RELOADTIME_MINIGUN;
+	
+	if (self.owner.clip_curr_primary >= CLIP_MAX_MINIGUN)
+	{
+		sprint(self.owner, PRINT_HIGH, "minigun reloaded.\n");
+		self.think = SUB_Remove;
+		self.nextthink = time + 0.1;
+		self.owner.reload_complete = 1;
+		self.owner.attack_finished = time + 0.3;	//slight buffer for hud cosmetic reasons
+	}
+};
+
 void ReloadThink_Shaft() =
 {
 	stuffcmd(self.owner, "play beta1/reload_shaft.wav\n");
@@ -222,8 +243,26 @@ void ReloadWeapon(float wpn) =
 		return;
 	
 	local entity te;
-
 	
+	if(wpn == WPN_MINIGUN)
+	{
+		if (self.clip_curr_tertiary >= CLIP_MAX_MINIGUN)
+		{
+			sprint(self, PRINT_HIGH, "already full.\n");
+			return;
+		}
+		te = spawn();			
+		te.classname = "reload";
+		te.owner = self;
+		te.weapon = wpn;
+		te.think = ReloadThink_Minigun;
+		te.nextthink = time + RELOADTIME_MINIGUN;
+		self.isreloading = 1;
+		sprint(self, PRINT_HIGH, "reloading minigun.\n");
+		self.weaponmodel = "";
+		self.weaponframe = 0;
+		self.reloadingweapon = WPN_MINIGUN;
+	}
 	
 	if(wpn == WPN_SHOTGUN)
 	{

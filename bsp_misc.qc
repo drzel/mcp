@@ -564,7 +564,7 @@ void() viewthing =
 	self.movetype = MOVETYPE_NONE;
 	self.solid = SOLID_NOT;
 	precache_model ("progs/player.mdl");
-	FO_SetModel(self, "progs/player.mdl");
+	FO_SetModel(self, "progs/player.mdl", DIM_WORLD);
 };
 
 

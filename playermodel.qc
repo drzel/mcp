@@ -175,6 +175,188 @@ void()	player_axed4 =	[$axattd4, player_run	] {self.weaponframe=8;};
 
 //============================================================================
 
+
+void() player_minigun1;
+void() player_minigundown;
+
+void shootminigun() =
+{
+		
+		local vector dirm;
+		dirm = aim (self,100000.000);
+		//FireBullets (4,dirm,'0.050 0.050 0');
+		FireBullets (5,dirm,'0.04 0.04 0');
+		FO_Sound(self, CHAN_WEAPON, "beta1/minigun_shoot.wav", 1, ATTN_NORM);
+		self.clip_curr_primary = self.clip_curr_primary - 1;
+		ChangeHudAmmo(self,WPN_MINIGUN);
+		muzzleflash();
+};
+
+void spindown() =
+{
+	FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spindown.wav", 1, ATTN_NORM);
+	self.mgun_spindown_finish = time + MINIGUN_SPINDOWN_TIME;
+	self.minigunstate =  MINIGUNSTATE_SPINNINGDOWN;		
+	player_minigundown();
+	
+};
+
+void() player_minigunup = [$nailatt1, player_minigunup]
+{	
+
+	self.attack_finished = time + 0.1;
+	
+	if(time > self.mgun_spinup_finish)
+	{
+		self.minigunstate =  MINIGUNSTATE_SPINNING;
+		player_minigun1();
+	}
+	
+	self.weaponframe = self.weaponframe + 1;
+	if (self.weaponframe >= 4)
+		self.weaponframe = 1;
+		
+	
+};
+
+void() player_minigun1 = [$nailatt1, player_minigun2]
+{
+	FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spin.wav", 1, ATTN_NORM);
+	self.attack_finished = time + 0.1;
+	
+	if(self.clip_curr_primary <= 0)
+	{
+		self.mgun_queuereload = 1;
+	}
+	/*
+	if((!self.button0 || self.mgun_queuereload == 1) && (self.qsweapon != WPN_MINIGUN || self.qsweapon == WPN_NONE))
+	{
+		FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spindown.wav", 1, ATTN_NORM);
+		self.mgun_spindown_finish = time + MINIGUN_SPINDOWN_TIME;
+		self.minigunstate =  MINIGUNSTATE_SPINNINGDOWN;	
+		player_minigundown();
+		return;
+	}
+	*/
+
+		
+	if(self.mgun_queuereload == 1)
+	{
+		spindown();
+		return;
+	}
+	if(self.qsweapon == WPN_NONE)
+	{
+		if(self.weapon != WPN_MINIGUN || !self.button0)
+		{
+			spindown();
+			return;
+		}
+	}
+	else
+	{
+		if(self.qsweapon != WPN_MINIGUN)
+		{
+			spindown();
+			return;
+		}
+	}
+	
+	
+	//if(self.flags & FL_ONGROUND && vlen(self.velocity) <= 20)
+	if(vlen(self.velocity) <= 20)
+	{
+
+		shootminigun();
+		self.weaponframe = 3;
+		return;
+	}
+	
+		self.weaponframe = self.weaponframe + 1;
+	if (self.weaponframe >= 4)
+		self.weaponframe = 1;
+	
+
+	
+};
+
+void() player_minigun2 = [$nailatt2, player_minigun1]
+{
+	FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spin.wav", 1, ATTN_NORM);
+	self.attack_finished = time + 0.1;
+	
+	if(self.clip_curr_primary <= 0)
+	{
+		self.mgun_queuereload = 1;
+	}
+	
+	/*
+	if((!self.button0 || self.mgun_queuereload == 1) && (self.qsweapon != WPN_MINIGUN || self.qsweapon == WPN_NONE))
+	{
+		FO_Sound(self, CHAN_WEAPON, "beta1/minigun_spindown.wav", 1, ATTN_NORM);
+		self.mgun_spindown_finish = time + MINIGUN_SPINDOWN_TIME;
+		self.minigunstate =  MINIGUNSTATE_SPINNINGDOWN;		
+		player_minigundown();
+		return;
+	}
+	*/
+	if(self.mgun_queuereload == 1)
+	{
+		spindown();
+		return;
+	}
+	if(self.qsweapon == WPN_NONE)
+	{
+		if(self.weapon != WPN_MINIGUN || !self.button0)
+		{
+			spindown();
+			return;
+		}
+	}
+	else
+	{
+		if(self.qsweapon != WPN_MINIGUN)
+		{
+			spindown();
+			return;
+		}
+	}
+	
+	//if(self.flags & FL_ONGROUND && vlen(self.velocity) <= 20)
+	if(vlen(self.velocity) <= 20)
+	{
+		shootminigun();
+		self.weaponframe = 4;
+		return;
+	}
+
+	self.weaponframe = self.weaponframe + 1;
+	if (self.weaponframe >= 4)
+		self.weaponframe = 1;
+};
+
+void() player_minigundown = [$nailatt1, player_minigundown]
+{
+	self.attack_finished = time + 0.1;
+
+	if(time > self.mgun_spindown_finish)
+	{
+		self.minigunstate =  MINIGUNSTATE_NONE;	
+		if(self.mgun_queuereload == 1)
+		{
+			self.mgun_queuereload = 0;
+			ReloadWeapon(WPN_MINIGUN);
+			
+		}
+		player_run();
+		SetPlayerSpeed();
+	}
+	
+	self.weaponframe = self.weaponframe + 1;
+	if (self.weaponframe >= 4)
+		self.weaponframe = 1;
+};
+
 void() player_nail1   =[$nailatt1, player_nail2  ] 
 {
 	//self.effects = self.effects | EF_MUZZLEFLASH;
@@ -441,6 +623,8 @@ void() player_pain =
 
 	if (VisualWeapon() == WPN_AXE)
 		player_axpain1 ();
+	else if (VisualWeapon() == WPN_MINIGUN)
+		PainSound();
 	else
 		player_pain1 ();
 };
@@ -563,7 +747,7 @@ void(string gibname, float dm) ThrowGib =
 
 	new = spawn();
 	new.origin = self.origin;
-	FO_SetModel (new, gibname);
+	FO_SetModel (new, gibname, DIM_WORLD);
 	setsize (new, '0 0 0', '0 0 0');
 	new.velocity = VelocityForDamage (dm);
 	new.movetype = MOVETYPE_BOUNCE;
@@ -580,7 +764,7 @@ void(string gibname, float dm) ThrowGib =
 
 void(string gibname, float dm) ThrowHead =
 {
-	FO_SetModel (self, gibname);
+	FO_SetModel (self, gibname, DIM_WORLD);
 	self.frame = 0;
 	self.nextthink = -1;
 	self.movetype = MOVETYPE_BOUNCE;
@@ -683,9 +867,9 @@ void() PlayerDie =
 
 void() set_suicide_frame =
 {	// used by klill command and diconnect command
-	if (self.model != "progs/beta1/mcp_player.mdl")
+	if (self.model != "progs/beta1/mcp_player2.mdl")
 	{
-		bprint(2,"zzzz\n");
+		//bprint(2,"zzzz\n");
 		return;	// allready gibbed
 	}
 	setmodel(self, string_null);

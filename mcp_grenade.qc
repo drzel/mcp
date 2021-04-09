@@ -26,7 +26,12 @@ void ThrownGrenade_Think() = {
 		}
 		else if(self.role == ROLE_RECON)
 		{
-			self.think = ExplodeAirBlastGrenade;
+			self.think = ExplodeShatterGrenade;
+		}
+		else if(self.role == ROLE_MGUNNER)
+		{
+			//self.think = ExplodeFragGrenade;
+			self.think = ExplodePushupGrenade;
 		}
 		else
 		{
@@ -96,7 +101,7 @@ void ThrowGrenade() = {
 	if(self.role == ROLE_RECON)
 	{
 		newmis.avelocity = '300 300 300';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_airblast.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_airblast.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
@@ -106,7 +111,7 @@ void ThrowGrenade() = {
 	{
 
 		newmis.avelocity = '300 300 300';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_flash.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_flash.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
@@ -115,7 +120,7 @@ void ThrowGrenade() = {
 	if(self.role == ROLE_FIGHTER)
 	{
 		newmis.avelocity = '300 300 300';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
@@ -125,7 +130,7 @@ void ThrowGrenade() = {
 	{
 
 		newmis.avelocity = '300 300 300';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl", DIM_WORLD);
 		
 		//newmis.avelocity = '0 300 0';
 		//newmis.angles = '0 0 0';
@@ -138,13 +143,23 @@ void ThrowGrenade() = {
 	if(self.role == ROLE_SUPPORT)
 	{
 		newmis.avelocity = '300 300 300';
-		FO_SetModel(newmis, "progs/beta1/mcp_gren_leech.mdl");
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_leech.mdl", DIM_WORLD);
 		if(self.team_no == TEAM_BLUE)
 		newmis.skin = 1;
 		else
 		newmis.skin = 2;
 	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		newmis.avelocity = '0 0 300';
+		FO_SetModel(newmis, "progs/beta1/mcp_gren_frag.mdl", DIM_WORLD);
+		if(self.team_no == TEAM_BLUE)
+		newmis.skin = 1;
+		else
+		newmis.skin = 2;	
+	}
 };
+
 
 
 void DestroyBearTrap() =
@@ -152,7 +167,7 @@ void DestroyBearTrap() =
 	FO_Sound(self, CHAN_WEAPON, "beta1/beartrap_break.wav", 1, ATTN_NORM);
 	local	entity gib1 = spawn();
 	gib1.origin = self.origin;
-	FO_SetModel(gib1, "progs/beta1/mcp_gren_beartrap_shut.mdl");
+	FO_SetModel(gib1, "progs/beta1/mcp_gren_beartrap_shut.mdl", DIM_WORLD);
 	setsize (gib1, '0 0 0', '0 0 0');
 	if(self.owner.team_no == TEAM_BLUE)
 		gib1.skin = 1;
@@ -171,8 +186,51 @@ void DestroyBearTrap() =
 	remove(self);
 };
 
+void ExplodePushupGrenade() =
+{
+	local entity head = findradius(self.origin, PUSHUPGREN_RADIUS + 40);
+	local float points;
+	
+	while (head)
+	{
+		if (head.takedamage && head.classname == "player")
+		{
+			points = vlen (self.origin - head.origin);
+			points = PUSHUPGREN_RADIUS - points;
+			if (points > PUSHUPGREN_RADIUS)
+				points = PUSHUPGREN_RADIUS;
+			points = points / PUSHUPGREN_RADIUS;
+
+			if (points > 0)
+			{
+				local float z = PUSHUPGREN_MAXPLAYERPUSH * points;
+				
+				
+				if(z < PUSHUPGREN_MINPLAYERPUSH)
+					z = PUSHUPGREN_MINPLAYERPUSH;
+				head.velocity_z = z;
+				
+				local float xy = 1 - points;
+				head.velocity_x = head.velocity_x * xy;
+				head.velocity_y = head.velocity_y * xy;
+			}
+		}
+		head = head.chain;
+	}
+	
+	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte(MSG_MULTICAST, TE_TAREXPLOSION);
+	WriteCoord(MSG_MULTICAST, self.origin_x);
+	WriteCoord(MSG_MULTICAST, self.origin_y);
+	WriteCoord(MSG_MULTICAST, self.origin_z);
+	multicast(self.origin, MULTICAST_PHS);
+
+	remove(self);
+};
+
 void () ExplodeFragGrenade = {
-    T_RadiusDamage(self, self.owner, 180, world,"grenade_frag");
+
+		T_RadiusDamage(self, self.owner, 180, world,"grenade_frag");
     ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
     WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
     WriteByte(MSG_MULTICAST, TE_EXPLOSION);
@@ -185,7 +243,10 @@ void () ExplodeFragGrenade = {
 };
 
 void () ExplodeLeechGrenade = {
-    T_RadiusDamage(self, self.owner, 180, world,"grenade_leech");
+
+
+		T_RadiusDamage(self, self.owner, 180, world,"grenade_leech");
+		
     ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
 
     
@@ -199,86 +260,187 @@ void () ExplodeLeechGrenade = {
     remove(self);
 };
 
-void StuffFlash(entity te, float amt) =
-{
-    string st = ftos(amt);
-    string cmd = strcat("v_cshift ", st, " ", st);
-    cmd = strcat(cmd, " ", st, " ", st, "\n");
-    stuffcmd(te, cmd);
-};
-
-void () FlashTimer = {
-    local entity te;
-
-    te = self.owner;
-    te.FlashTime = te.FlashTime - 0.6;
-    if (te.FlashTime < 5) {
-        te.FlashTime = 1;
-        stuffcmd(te, "v_cshift; wait; bf\n");
-        remove(self);
-        te.dimension_see = DMN_NOFLASH;
-        te.dimension_seen = DMN_NOFLASH;
-        return;
-    }
-
-    StuffFlash(te, (te.FlashTime*10));
-
-    self.nextthink = time + 0.6;
-};
-
-void SetFlashDimension(entity te) =
-{
-    FO_FlashDimension = ((FO_FlashDimension + 1) == 8) ? DMN_FLASH : FO_FlashDimension + 1;
+//void StuffFlash(entity te, float amt) =
+//{
+    //string st = ftos(amt);
+    //string cmd = strcat("v_cshift ", st, " ", st);
+    //cmd = strcat(cmd, " ", st, " ", st, "\n");
     
-    float playerdimension = 1<<FO_FlashDimension;
+   // string cmd = strcat("v_cshift ", ftos(amt), " ", ftos(amt), " ", ftos(amt), "\n");
+    //stuffcmd(te, cmd);
+//};
+
+//void () FlashTimer = {
+ //local entity te;
+
+//te = self.owner;
+//te.FlashTime = te.FlashTime - 0.6;
+//if (te.FlashTime < 5) {
+//te.FlashTime = 1;
+//stuffcmd(te, "v_cshift; wait; bf\n");
+//remove(self);
+//te.dimension_see = DMN_NOFLASH;
+//te.dimension_seen = DMN_NOFLASH;
+//return;
+ //}
+
+//    StuffFlash(te, (te.FlashTime*10));
+
+//    self.nextthink = time + 0.6;
+//};
+
+//void SetFlashDimension(entity te) =
+//{
+    //FO_FlashDimension = ((FO_FlashDimension + 1) == 8) ? DMN_FLASH : FO_FlashDimension + 1;
+    
+    //float playerdimension = 1<<FO_FlashDimension;
 
     // i hate bitflags and i'm bad so this is probably wrong
-    te.dimension_see = DMN_FLASH | playerdimension;
-    te.dimension_seen = playerdimension | DMN_NOFLASH;
-};
+    //te.dimension_see = DMN_FLASH | playerdimension;
+    //te.dimension_seen = playerdimension | DMN_NOFLASH;
+//};
 
-float FO_CalcFlash(entity te) =
+//float FO_CalcFlash(entity te) =
+//{
+    //float timeleft = te.FlashTime;
+    //float flashAmtMax = 240;
+    //float flashAmtMin = 100;
+   // float flashAmtMaxMult = stof(infokey(te, "maxflash"));
+    //float flashAmtMinMult = stof(infokey(te, "minflash"));
+    //float flashAmt;
+    
+    
+    //flashAmt = (flashAmtMaxMult > 0) ? flashAmtMax * flashAmtMaxMult : flashAmtMax;
+    //flashAmtMin = (flashAmtMinMult > 0) ? flashAmtMin * flashAmtMinMult : flashAmtMin;
+    
+    //float perc = timeleft / FLASH_DURATION;
+
+   // flashAmt = flashAmt * perc;
+    //flashAmt = flashAmt < flashAmtMin ? flashAmtMin : flashAmt;
+    //return flashAmt;
+//};
+
+//void FO_FlashTimer() =
+//{
+    //local entity te;
+
+    //te = self.owner;
+    //te.FlashTime = te.FlashTime - .1;
+   // if (te.FlashTime <= 0) {
+        //sprint(te, PRINT_HIGH, "flash has worn off\n");
+        //stuffcmd(te, "v_cshift; wait; bf\n");
+        //remove(self);
+        //te.dimension_see = DMN_NOFLASH;
+        //te.dimension_seen = DMN_NOFLASH;
+       // return;
+    //}
+
+    //float flashamount = FO_CalcFlash(te);
+    //StuffFlash(te, flashamount);
+
+    //self.nextthink = time + .1;
+//};
+
+
+
+void mcpflash_think() =
 {
-    float timeleft = te.FlashTime;
-    float flashAmtMax = 240;
-    float flashAmtMin = 100;
-    float flashAmtMaxMult = stof(infokey(te, "maxflash"));
-    float flashAmtMinMult = stof(infokey(te, "minflash"));
-    float flashAmt;
+	if(time >= self.bubble_count)
+	{
+		sprint(self.owner, PRINT_HIGH, "flash has worn off\n");
+		stuffcmd(self.owner, "v_cshift; wait; bf\n");
+		ResetVisDimensions(self.owner);
+		remove(self);
+		return;
+	}
+	
+	local float timeleft = self.bubble_count - time;
+	local float flashAmtMax = 240;
+	local float flashAmtMin = 100;
+	local float flashAmtMaxMult = stof(infokey(self.owner, "maxflash"));
+	local float flashAmtMinMult = stof(infokey(self.owner, "minflash"));
+	local float flashAmt;
     
     
-    flashAmt = (flashAmtMaxMult > 0) ? flashAmtMax * flashAmtMaxMult : flashAmtMax;
-    flashAmtMin = (flashAmtMinMult > 0) ? flashAmtMin * flashAmtMinMult : flashAmtMin;
+	flashAmt = (flashAmtMaxMult > 0) ? flashAmtMax * flashAmtMaxMult : flashAmtMax;
+	flashAmtMin = (flashAmtMinMult > 0) ? flashAmtMin * flashAmtMinMult : flashAmtMin;
     
-    float perc = timeleft / FLASH_DURATION;
+	local float perc = timeleft / FLASH_DURATION;
 
-    flashAmt = flashAmt * perc;
-    flashAmt = flashAmt < flashAmtMin ? flashAmtMin : flashAmt;
-    return flashAmt;
-};
+	flashAmt = flashAmt * perc;
+	flashAmt = flashAmt < flashAmtMin ? flashAmtMin : flashAmt;
+	//bprint(2,strcat(ftos(flashAmt),"flashamt\n"));
+	//StuffFlash(self.owner, flashAmt);
+	
+	//local string cmd = strcat(ftos(flashAmt), " ", ftos(flashAmt), " ", ftos(flashAmt)," ", ftos(flashAmt));
+	//stuffcmd(self.owner, strcat("v_cshift ", cmd, "\n"));
+	self.nextthink = time + .1;
+	
+}
 
-void FO_FlashTimer() =
+void ExplodeFlashGrenade() =
 {
-    local entity te;
 
-    te = self.owner;
-    te.FlashTime = te.FlashTime - .1;
-    if (te.FlashTime <= 0) {
-        sprint(te, PRINT_HIGH, "flash has worn off\n");
-        stuffcmd(te, "v_cshift; wait; bf\n");
-        remove(self);
-        te.dimension_see = DMN_NOFLASH;
-        te.dimension_seen = DMN_NOFLASH;
-        return;
-    }
+	self.effects = self.effects | EF_BRIGHTLIGHT;
+	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
+	WriteByte(MSG_MULTICAST, TE_TAREXPLOSION);
+	WriteCoord(MSG_MULTICAST, self.origin_x);
+	WriteCoord(MSG_MULTICAST, self.origin_y);
+	WriteCoord(MSG_MULTICAST, self.origin_z);
+	multicast(self.origin, MULTICAST_PHS);
+	
+	local entity te = findradius(self.origin, 300);
+	while (te) 
+	{
+		if (te.classname == "player" && te.deadflag == DEAD_NO) 
+		{
+			if(te.team_no != self.team_no || te == self.owner)
+			{
+				traceline(self.origin, te.origin, 1, self);
+				if (trace_fraction == 1) 
+				{
+					sprint(te, PRINT_HIGH, "you have been flashed!\n");
+					te.deathtype = "grenade_flash";
+					T_Damage (te, self, self.owner, 20);
+					stuffcmd(te, "play beta1/grenade_flash.wav\n");
+					//local float dist = 
+					local float flashdur = 3;
+					
+					local entity ft;
+					local float found = 0;
+					ft = find(world, classname, "mcpflashtimer");	
+					while (ft) 
+					{
+						if (te != world && ft.owner == te ) 
+						{
+							found = found + 1;
+							ft.bubble_count = time + flashdur;
+							ft.nextthink = time + .1;
+						}
+						te = find(te, classname, "mcpflashtimer");
+					}
+					if(found == 0)
+					{
+						newmis = spawn();
+						newmis.classname = "mcpflashtimer";
 
-    float flashamount = FO_CalcFlash(te);
-    StuffFlash(te, flashamount);
+						newmis.owner = te;
+						newmis.think = mcpflash_think;
+						newmis.nextthink = time + .1;
+						newmis.bubble_count = time + flashdur;
+						te.dimension_see = 0;
+					}
 
-    self.nextthink = time + .1;
+				}
+			}
+			
+		}
+		te = te.chain;
+	}
+	remove(self);
 };
 
-void () ExplodeFlashGrenade = {
+/*void () ExplodeFlashGrenadeOld = {
 
     self.effects = self.effects | EF_BRIGHTLIGHT;
     WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
@@ -309,11 +471,12 @@ vector org;
                     dam = 1;
                 }
                 //TF_T_Damage(te, self, self.owner, dam, 2, 16 | 4);
-                te.deathtype = "grenade_flash";
-                T_Damage(te,self,self.owner,dam);
 
-		T_Damage (other, self, self.owner, 18);
+			te.deathtype = "grenade_flash";
+                //T_Damage(te,self,self.owner,dam);
 
+		T_Damage (te, self, self.owner, 20);
+		
                 stuffcmd(te, "play beta1/grenade_flash.wav\n");
                 
                 if (te.health > 0) {
@@ -358,7 +521,7 @@ vector org;
     }
 
     remove(self);
-};
+};*/
 
 void () StickyGrenade = {
     local entity te;
@@ -377,7 +540,7 @@ void () StickyGrenade = {
 	if(self.role == ROLE_RECON)
 	{
 		bprint(PRINT_MEDIUM, strcat("No ", self.owner.netname,", swallowing the grenade isn't very effective!\n"));
-		newmis.think = ExplodeAirBlastGrenade;
+		newmis.think = ExplodeShatterGrenade;
 	}
 	
 	if(self.role == ROLE_ASSASSIN)
@@ -420,6 +583,15 @@ void () StickyGrenade = {
 		newmis.avelocity = '300 300 300';
 		
 	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		bprint(PRINT_MEDIUM, strcat("It seems, ", self.owner.netname,", needs to learn how to count!\n"));	
+	
+
+		newmis.think = ExplodePushupGrenade;
+		newmis.avelocity = '0 0 300';
+
+	}
     
 	setsize(newmis, '0 0 0', '0 0 0');
 	setorigin(newmis, self.owner.origin);
@@ -454,16 +626,44 @@ void (entity inflictor, entity attacker, float bounce, entity ignore) T_RadiusBo
 						head.velocity = head.velocity * (points / 20);
 
 					}
-					HitSound(head, inflictor, attacker, 0);
+					//HitSound(head, inflictor, attacker, 0);
 				}
 		}
 		head = head.chain;
 	}
 };
 
-void ExplodeAirBlastGrenade() = 
+void ExplodeShatterGrenade() = 
 {
 	T_RadiusBounce(self, self.owner, 240, world);
+	
+
+	local   float   points;
+	local   entity  head;
+	local   vector  org;
+	head = findradius(self.origin, 240);
+	local float leech;
+	local float SHATTER_MAXDAMAGE = 100;
+	while (head)
+	{
+		if (head.classname == "player" && head.team_no != self.owner.team_no && head.deadflag == DEAD_NO)
+		{
+			if (head.takedamage)
+			{
+				org = head.origin + (head.mins + head.maxs)*0.5;
+				points = 0.5*vlen (self.origin - org);
+				if (points < 0)
+					points = 0;
+				points = SHATTER_MAXDAMAGE - points;
+
+				head.deathtype = "grenade_shatter";
+				T_Damage (head, self, self.owner, points);
+				
+			}
+		}
+		head = head.chain;
+	}
+
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte(MSG_MULTICAST, TE_EXPLOSION);
 	WriteCoord(MSG_MULTICAST, self.origin_x);
@@ -599,7 +799,7 @@ void BearTrapOpen_Touch() = {
 	self.velocity = self.velocity + '0 0 250';
 	
 	self.movetype = MOVETYPE_BOUNCE;
-	FO_SetModel(self, "progs/beta1/mcp_gren_beartrap_shut.mdl");
+	FO_SetModel(self, "progs/beta1/mcp_gren_beartrap_shut.mdl", DIM_WORLD);
 	FO_Sound(self, CHAN_ITEM, "beta1/beartrap_shut.wav", 1, ATTN_NORM);
 	setsize(self, '0 0 0', '0 0 0');
 	self.think = BearTrap_Think;
@@ -626,7 +826,7 @@ void BearTrap_Think() = {
 		self.solid = SOLID_TRIGGER;
 		self.movetype = MOVETYPE_TOSS;
 
-		FO_SetModel(self, "progs/beta1/mcp_gren_beartrap_open.mdl");
+		FO_SetModel(self, "progs/beta1/mcp_gren_beartrap_open.mdl", DIM_WORLD);
 		FO_Sound(self, CHAN_WEAPON, "beta1/beartrap_open.wav", 1, ATTN_NORM);
 		setsize(self, '-16 -16 0', '16 16 56');
 
@@ -701,7 +901,7 @@ void ExplodeBigProxy() =
 			e.classname = "littleproxy";
 			e.owner = self.owner;
 			e.team_no = self.owner.team_no;
-			FO_SetModel(e, "progs/beta1/mcp_gren_littleproxy.mdl");
+			FO_SetModel(e, "progs/beta1/mcp_gren_littleproxy.mdl", DIM_WORLD);
 			e.mins = '-6 -6 -8';
 			e.maxs = '6 6 4';
 			e.angles = '0 0 0';
@@ -785,7 +985,7 @@ void PrimeGrenade() = {
 	
 	if(self.role == ROLE_RECON)
 	{
-		sprint(self, PRINT_HIGH, "priming airblast grenade...\n");	
+		sprint(self, PRINT_HIGH, "priming shatter grenade...\n");	
 	}
 	if(self.role == ROLE_ASSASSIN)
 	{
@@ -803,6 +1003,10 @@ void PrimeGrenade() = {
 	if(self.role == ROLE_SUPPORT)
 	{
 		sprint(self, PRINT_HIGH, "priming leech grenade...\n");		
+	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		sprint(self, PRINT_HIGH, "priming pushup grenade...\n");		
 	}
 
 };

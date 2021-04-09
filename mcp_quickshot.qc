@@ -138,6 +138,11 @@ float VisualWeapon() =
 	{
 		return WPN_SHAFT;
 	}
+	
+		if(self.weaponmodel == "progs/beta1/wpn/blue_minigun.mdl" || self.weaponmodel == "progs/beta1/wpn/red_minigun.mdl")
+	{
+		return WPN_MINIGUN;
+	}
 
 	return WPN_NONE;
 };

@@ -25,7 +25,7 @@
 
 */
 
-entity stemp, otemp, s, old;
+//entity stemp, otemp, s, old;
 
 
 void() trigger_reactivate =
@@ -328,7 +328,7 @@ void() play_teleport =
 
 void(vector org) spawn_tfog =
 {
-	s = spawn ();
+	local entity s = spawn ();
 	s.origin = org;
 	s.nextthink = time + 0.2;
 	s.think = play_teleport;
@@ -582,7 +582,7 @@ void() hurt_touch =
 	}
 	if(other.classname == "item_mcpflag")
 	{
-		mcpflag.cnt = time + 5;
+		mcpflag.cnt = 6;
 	}
 
 	return;
