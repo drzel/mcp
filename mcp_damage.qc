@@ -60,16 +60,26 @@ void(entity targ, entity attacker) Killed =
 	//ghostbuster sound
 	if(targ.iscloaked == 1 && targ.classname == "player")
 	{
+		if(attacker.classname == "player")
+			AddStat(attacker, STAT_GHOSTBUST, 1);
+		
 		local entity te = find(world, classname, "player");
 		while(te)
 		{
 			if(te != world)
 			{
 				stuffcmd(te, "play beta1/gbuster.wav\n");
+				
 			}
 			te = find(te,classname,"player");
 		}	
 	}
+	
+	if(mcpflag.owner == targ && attacker.classname == "player")
+	{
+		AddStat(attacker, STAT_FLAGCARRIERKILLED, 1);
+	}
+	
 	
 	KillSound(targ, attacker);
 	SetNextRespawn(targ, 0);
@@ -163,14 +173,19 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 		targ.next_healtharmourregen = time + 3;
 		
 		if(targ.role == ROLE_MGUNNER && targ.minigunstate != MINIGUNSTATE_NONE)
-			damage = damage * MGUNNER_DAMAGEREDUCTION;			
+			damage = damage * MGUNNER_DAMAGEREDUCTION;
+			
+
+		
 	}
 // used by buttons and triggers to set activator for target firing
 	damage_attacker = attacker;
 
 // save damage based on the target's armor level
 	damage = ceil(damage);
-	CreateDamageNumber(damage, targ, attacker);
+	AddDamageStat(targ, inflictor, attacker, damage);
+		
+	
 	if(damage >= targ.armorvalue)
 	{
 		save = targ.armorvalue;
@@ -389,15 +404,15 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 */
 
 //T_RadiusDamage
-void(entity inflictor, entity attacker, float damage, entity ignore, string dtype) T_RadiusDamage =
+void(entity inflictor, entity attacker, float damage, entity ignore, string dtype, float addstat) MCP_RadiusDamage =
 {
 	local   float   points;
 	local   entity  head;
 	local   vector  org;
-
+	
 	head = findradius(inflictor.origin, damage+40);
 	local float leech;
-	
+	local float enemyplayershit = 0;
 	while (head)
 	{
 		//bprint (PRINT_HIGH, head.classname);
@@ -425,6 +440,9 @@ void(entity inflictor, entity attacker, float damage, entity ignore, string dtyp
 						head.deathtype = dtype;
 						T_Damage (head, inflictor, attacker, points);
 						
+						if(head.classname == "player" && attacker.classname == "player" && attacker.team_no != head.team_no)
+							enemyplayershit++;
+						
 						if(attacker.team_no != head.team_no && head.classname == "player" && dtype == "grenade_leech" && inflictor.cnt != 1)
 						{
 
@@ -440,6 +458,28 @@ void(entity inflictor, entity attacker, float damage, entity ignore, string dtyp
 			}
 		}
 		head = head.chain;
+	}
+	if(enemyplayershit > 0 && addstat == 1)
+	{
+		if(inflictor.classname == "throwngrenade")
+		{
+			AddStat(attacker,STAT_GRENHIT, inflictor.role);
+		}
+		else if(dtype == "clustermini_aoe" ||  dtype == "clustermini_direct")
+		{
+			
+			if(inflictor.gren.cnt == 0)
+				{
+					inflictor.gren.cnt++;
+					remove(inflictor.gren);
+					AddStat(attacker, STAT_WEAPONHIT, WPN_PIPELAUNCHER);
+				}
+			
+		}
+		else
+		{
+			AddRadiusHitStat(attacker, dtype);
+		}
 	}
 	
 };

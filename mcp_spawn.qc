@@ -11,13 +11,14 @@ void ClearPlayerState() =
 	KillMgunnerSpeedTracker();
 	KillC4();
 	KillMCPFlashTimer();
+	KillMidairEnt();
 	//DestroyBeartraps();
 	//DetStickys();
 	DeathMCPFlag();
 	
 	self.reload_complete = 0;
 	self.isreloading = 0;
-	
+	self.FlashTime = 0;
 	self.cloak_complete = 0;
 	self.iscloaked = 0;
 	self.gren = world;
@@ -264,7 +265,7 @@ void SpawnPlayerZut () =
 		setmodel(self, "progs/eyes.mdl");
 		modelindex_eyes = self.modelindex;
 
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 
 		self.items = 0;
@@ -291,7 +292,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_NAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_RECON;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_NAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -310,7 +311,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_RAILGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_ASSASSIN;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_RAILGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -328,7 +329,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_ROCKETLAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_FIGHTER;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_ROCKETLAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -346,7 +347,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_PIPELAUNCHER;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_BOMBER;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_PIPELAUNCHER;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -364,7 +365,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_SHAFT;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_SUPPORT;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_SHAFT;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -382,7 +383,7 @@ void SpawnPlayerZut () =
 		self.weapon = WPN_MINIGUN;
 		self.items = self.items | IT_ARMOR2;
 		self.armorvalue = ARMOUR_MAX_MGUNNER;
-		FO_SetModel(self, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_MINIGUN;
 		self.clip_curr_secondary = CLIP_MAX_SUPERSHOTGUN;
@@ -742,6 +743,21 @@ void KillReloadEnt()=
 		te = find(te, classname, "reload");
         }
 };
+
+void KillMidairEnt()=
+{
+
+	local entity te = find(world, classname, "consecmidaircounter");
+	while (te) 
+	{
+		if (te.owner == self && te != world) 
+		{
+			remove(te);
+		}
+		te = find(te, classname, "consecmidaircounter");
+        }
+};
+
 void KillHarpoonTimers()=
 {
 	local entity te = find(world, classname, "harpoontimer");
@@ -780,9 +796,11 @@ void KillMCPFlashTimer()=
 		{
 			te.think = SUB_Remove;
 			te.nextthink = time;
+			
 		}
 		te = find(te, classname, "mcpflashtimer");
         }
+        stuffcmd(self, "v_cshift 0 0 0 0; wait; bf\n");
 	
 };
 void KillCloakEnt()=
@@ -826,7 +844,7 @@ void DisableHarpoonPull()=
 		te = find(te, classname, "harpoon");
         }
 };
-
+/*
 void KillLittleProxy()=
 {	
 	local entity te = find(world, classname, "littleproxy");
@@ -842,7 +860,8 @@ void KillLittleProxy()=
 		te = find(te,classname,"littleproxy");
 	}
 };
-
+*/
+/*
 void DestroyBeartraps()=
 {	
 	local entity te = find(world, classname, "beartrap");
@@ -858,7 +877,7 @@ void DestroyBeartraps()=
 		te = find(te,classname,"beartrap");
 	}
 };
-
+*/
 void DisableGrenEffectOnDeath()=
 {
 	local entity te = find(world, classname, "throwngrenade");
@@ -899,6 +918,19 @@ void KillAllPlayers() =
 		te = find(te, classname, "player");
 	}
 
+};
+
+void ClearMarkersAgainstMe()=
+{
+	local entity te = find(world, classname, "marker");
+	while (te) 
+	{
+		if (te != world && te.owner == self) 
+		{
+			te.bubble_count = -1;
+		}
+		te = find(te, classname, "marker");
+	}
 };
 
 void KillMgunnerSpeedTracker() =

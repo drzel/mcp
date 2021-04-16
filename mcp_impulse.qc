@@ -202,6 +202,7 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 {
 	local   vector direction;
 	local   vector  src;
+	local float playershit;
 	
 	makevectors(self.v_angle);
 
@@ -211,22 +212,48 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 	ClearMultiDamage ();
 
 	traceline (src, src + dir*3000, FALSE, self);	//2048
-	ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
 	
 	puff_org = trace_endpos - dir*4;
 	
 	while (shotcount > 0)
 	{
+		
 		direction = dir + crandom()*spread_x*v_right + crandom()*spread_y*v_up;
 		traceline (src, src + direction*2048, FALSE, self); //false
 
 		if (trace_fraction != 1.0)
-			TraceAttack (4, direction);
+		{
+			//TraceAttack (4, direction);
+			local   vector  vel, org;
+	
+			vel = normalize(dir + v_up*crandom() + v_right*crandom());
+			vel = vel + 2*trace_plane_normal;
+			vel = vel * 200;
+
+			org = trace_endpos - dir*4;
+			if (trace_ent.takedamage)
+			{
+
+
+				blood_count = blood_count + 1;
+				blood_org = org;
+				AddMultiDamage (trace_ent, 4);
+				
+				if(trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
+					playershit++;
+			}
+			else
+			{
+				puff_count = puff_count + 1;
+			}
+		}
 
 		shotcount = shotcount - 1;
 	}
 	ApplyMultiDamage ();
 	Multi_Finish ();
+	if(playershit > 0)
+		AddStat(self, STAT_WEAPONHIT, self.weapon);
 };
 
 
@@ -238,10 +265,67 @@ ROCKETS
 ==============================================================================
 */
 
+
+void MidAir(entity attacker, entity targ, float dist) =
+{
+	local entity te;
+	
+	local float rng = MyRNG(3);
+	if(rng == 1)
+	{
+		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair1.wav");
+		SoundTeam(TEAM_RED, world,"beta1/voice_midair1.wav");
+	}
+	else if (rng == 2)
+	{
+		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair2.wav");
+		SoundTeam(TEAM_RED, world,"beta1/voice_midair2.wav");
+	}
+	else
+	{
+		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair3.wav");
+		SoundTeam(TEAM_RED, world,"beta1/voice_midair3.wav");
+	}
+	
+		
+	
+	if(targ.hasbeenmidaired)
+	{
+			
+		te = find(world, classname, "consecmidaircounter");
+		while (te) 
+		{
+			if (te.owner == targ && te.gren == attacker && te != world) 
+			{
+				te.cnt++;
+				AddStat(attacker, STAT_ROCKETMIDAIR, 1);
+				sprint(self.owner,PRINT_HIGH,strcat("you midaired ",targ.classname, "x",ftos(1), " (",ftos(dist),")\n"));	
+			}
+			te = find(te, classname, "consecmidaircounter");
+		}
+	}
+	else
+	{
+		te = spawn();
+		te.classname = "consecmidaircounter";
+		te.owner = targ;
+		te.gren = attacker;
+		te.nextthink = time + 60;
+		te.think = SUB_Remove;
+		te.cnt = 1;
+		AddStat(attacker, STAT_ROCKETMIDAIR, 1);
+		
+		sprint(self.owner,PRINT_HIGH,strcat("you midaired ",targ.classname, "x",ftos(1), " (",ftos(dist),")\n"));	
+	}
+	targ.hasbeenmidaired = 1;
+	AddStat(attacker, STAT_ROCKETMIDAIRDIST, dist);
+};
+
 void() T_MissileTouch =
 {
 	local float     damg;
-
+	local float 	hitplayer = 0;
+	
 	if (other == self.owner)
 		return;         // don't explode on owner
 
@@ -274,18 +358,37 @@ void() T_MissileTouch =
 			
 			te = find(te, classname, "harpoontimer");
 		}
+		if(other.classname == "player" && other.team_no != self.owner.team_no)
+		{
+			hitplayer = 1;
+			AddStat(self.owner, STAT_ROCKETDIRECT, 1);
+			
+			if (!(other.flags & FL_ONGROUND) && !(other.flags & FL_INWATER))
+			{
+				
+				traceline(other.origin, other.origin + '0 0 -10000', 1, self);
+				local float dist = ceil(vlen(other.origin - trace_endpos));
 		
+				
+				
+				MidAir(self.owner, other, dist);
+				//sprint(self.owner,PRINT_HIGH,strcat("you midaired ",self.wpnstats[1].name, "(",ftos(dist),")height\n"));
+			}
+
+		}
 		if(isharp)
 		{	
 			//bprint(2,"isharped\n");
-			other.deathtype = "rocket_directquad";
+			other.deathtype = "rocket_directharp";
+			
 			T_Damage (other, self, self.owner, damg * 4 );
+			
 		}
 		else
 		{	
-
-				other.deathtype = "rocket_direct";
-				T_Damage (other, self, self.owner, damg );
+			
+			other.deathtype = "rocket_direct";
+			T_Damage (other, self, self.owner, damg );
 	
 		}
 	}
@@ -293,11 +396,15 @@ void() T_MissileTouch =
 	// don't do radius damage to the other, because all the damage
 	// was done in the impact
 
-
-		T_RadiusDamage (self, self.owner, 90, other, "rocket");
-
+		if(hitplayer == 0)
+			MCP_RadiusDamage (self, self.owner, 90, other, "rocket", 1);
+		else
+		{
+			MCP_RadiusDamage (self, self.owner, 90, other, "rocket", 0);
+			AddStat(self.owner, STAT_WEAPONHIT, WPN_ROCKETLAUNCHER);
+		}
 		
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 
 //  FO_Sound (self, CHAN_WEAPON, "weapons/r_exp3.wav", 1, ATTN_NORM);
 	self.origin = self.origin - 8 * normalize(self.velocity);
@@ -366,7 +473,7 @@ else
 
 
 }
-	ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
+	AddStat(self, STAT_WEAPONFIRED, WPN_SHAFT);
 	if (trace_ent.takedamage)
 	{
 	
@@ -381,7 +488,7 @@ else
 		if (trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
 		{
 			//trace_ent.velocity_z = trace_ent.velocity_z + 400;
-
+			AddStat(self, STAT_WEAPONHIT, WPN_SHAFT);
 			
 			if(infokey(self, "healsound") != "0")
 				stuffcmd(self, "play beta1/healsound.wav\n");
@@ -508,8 +615,8 @@ void() ClusterMiniExplode =
 	}
 	self.voided = 1;
 
-		T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_AOE, world, "clustermini_aoe");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+		MCP_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_AOE, world, "clustermini_aoe", 1);
+
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -528,8 +635,13 @@ void() ClusterBigDirectExplode =
 	}
 	self.voided = 1;
 
-		T_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+	if(other.classname == "player" && other.team_no != self.owner.team_no)
+	{
+		MCP_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct", 0);
+		AddStat(self.owner, STAT_DIRECTPINEAPPLE, 1);
+	}
+	else
+		MCP_RadiusDamage (self, self.owner, CLUSTERBIGDAMAGE_DIRECT, world, "clusterbig_direct", 1);
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -548,9 +660,9 @@ void() ClusterMiniDirectExplode =
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_DIRECT, world, "clustermini_direct");
+	MCP_RadiusDamage (self, self.owner, CLUSTERMINIDAMAGE_DIRECT, world, "clustermini_direct", 1);
 	
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -562,7 +674,7 @@ void() ClusterMiniDirectExplode =
 	remove (self);
 };
 
-void() StickyDirectExplode =
+/*void() StickyDirectExplode =
 {
 	if (self.voided) {
 		return;
@@ -570,7 +682,7 @@ void() StickyDirectExplode =
 	self.voided = 1;
 
 	T_RadiusDamage (self, self.owner, STICKYDAMAGE_DIRECT, world, "sticky_direct");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -590,7 +702,7 @@ void() StickyTrapAirExplode =
 	self.voided = 1;
 
 	T_RadiusDamage (self, self.owner, STICKYDAMAGE_AIRBURST, world, "sticky_trap");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -610,7 +722,7 @@ void() StickyTrapGroundExplode =
 	self.voided = 1;
 
 	T_RadiusDamage (self, self.owner, STICKYDAMAGE_GROUND, world, "sticky_trap");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
@@ -621,8 +733,7 @@ void() StickyTrapGroundExplode =
 
 	remove (self);
 };
-
-
+*/
 
 //=============================================================================
 
@@ -889,7 +1000,13 @@ void() DeadOrAliveImpulses =
 		StopQuickShot(3);
 	if(self.impulse == IMP_QSHOT4_STOP)
 		StopQuickShot(4);
-
+		
+	if(self.impulse == IMP_PRINTSTATS)
+	{
+		PrintStats(self);
+		self.impulse = 0;
+	}	
+	
 };
 
 void() AliveImpulses =

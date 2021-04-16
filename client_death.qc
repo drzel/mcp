@@ -22,6 +22,8 @@ void() ClientKill =
 	{
 		bprint (PRINT_MEDIUM, self.netname);
 		bprint (PRINT_MEDIUM, " suicides\n");
+		AddStat(self, STAT_SUICIDE, 1);
+
 	}
 	set_suicide_frame ();
 	self.health = -1;

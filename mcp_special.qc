@@ -1,5 +1,5 @@
 
-void DetStickys()=
+/*void DetStickys()=
 {
 	local float playsound = 0;
 	local entity te = find(world, classname, "sticky_trap");
@@ -29,7 +29,7 @@ void DetStickys()=
         
         if(playsound == 1)
 		FO_Sound(self, CHAN_BODY, "beta1/detsticky.wav", 1, ATTN_NORM);
-};
+};*/
 
 void Cloak_Think()=
 {
@@ -44,7 +44,7 @@ void Cloak_Think()=
 	if(self.bubble_count >= SPECIAL_DURATION_ASSASSIN)
 	{
 		self.owner.cloak_complete = 1;
-		FO_SetModel(self.owner, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+		FO_SetModel(self.owner, FPATH_PLAYERMDL, DIM_WORLD);
 		setsize (self.owner, VEC_HULL_MIN, VEC_HULL_MAX);
 		FO_Sound(self.owner, CHAN_ITEM, "beta1/uncloak.wav", 1, ATTN_NORM);
 		sprint(self.owner, PRINT_HIGH, "cloak removed.\n");
@@ -187,10 +187,9 @@ void SpawnTeleBall() =
 		newmis.skin = 1;
 	if(self.team_no == TEAM_RED)
 		newmis.skin = 2;
-	//setsize(newmis, self.mins, self.maxs);
-	setsize (newmis, '-8 -8 -8', '8 8 8');
-	//setsize (newmis, '-4 -4 -4', '4 4 4');                
-	//setorigin (newmis, self.origin + v_forward*8 + '0 0 16');
+
+	//setsize (newmis, '-8 -8 -8', '8 8 8');
+	setsize(newmis,'0 0 0', '0 0 0');
 	setorigin (newmis, self.origin + '0 0 16');
 	FO_Sound(newmis, CHAN_ITEM, "beta1/teleball_start.wav", 1, ATTN_NORM);
 };
@@ -254,36 +253,163 @@ float CheckArea (entity obj, entity builder) = {
 
 float IsTeleBlocked(entity tb) =
 {
-	local float blockages = 0;
-	
-	//c
-	traceline(tb.origin + '0 0 -34', tb.origin + '0 0 34', FALSE, tb);
-	if (trace_fraction != 1 && !trace_ent.takedamage)
-		blockages = 1;
-	
-	//fr
-	traceline(tb.origin + '18 18 -34', tb.origin + '18 18 34', FALSE, tb);
-	if (trace_fraction != 1 && !trace_ent.takedamage)
-		blockages = 1;
-	
-	//br
-	traceline(tb.origin + '18 -18 -34', tb.origin + '18 -18 34', FALSE, tb);
-	if (trace_fraction != 1 && !trace_ent.takedamage)
-		blockages = 1;
-	
-	//fl	
-	traceline(tb.origin + '-18 18 -34', tb.origin + '-18 18 34', FALSE, tb);
-	if (trace_fraction != 1 && !trace_ent.takedamage)
-		blockages = 1;
-		
-	//bl	
-	traceline(tb.origin + '-18 -18 -34', tb.origin + '-18 -18 34', FALSE, tb);
-	if (trace_fraction != 1 && !trace_ent.takedamage)
-		blockages = 1;
 
+	
+	//points looking down 
+	// t1  t2  t3
+	// t4  t5  t6
+	// t7  t8  t9
+	
+	
+	
+	//VEC_HULL_MAX = '16 16 32';
+	//VEC_HULL_MIN = '-16 -16 -24';
 
+	
+	local vector t1 = tb.origin + '16 16 32';
+	local vector t2 = tb.origin + '0 16 32';
+	local vector t3 = tb.origin + '16 16 32';
+	
+	local vector t4 = tb.origin + '-16 0 32';
+	local vector t5 = tb.origin + '0 0 32';
+	local vector t6 = tb.origin + '16 0 32';
+	
+	local vector t7 = tb.origin + '-16 -16 32';
+	local vector t8 = tb.origin + '0 -16 32';
+	local vector t9 = tb.origin + '16 -16 32';
+	
+	local vector b1 = tb.origin + '16 16 -24';
+	local vector b2 = tb.origin + '0 16 -24';
+	local vector b3 = tb.origin + '16 16 -24';
+	
+	local vector b4 = tb.origin + '-16 0 -24';
+	local vector b5 = tb.origin + '0 0 -24';
+	local vector b6 = tb.origin + '16 0 -24';
+	
+	local vector b7 = tb.origin + '-16 -16 -24';
+	local vector b8 = tb.origin + '0 -16 -24';
+	local vector b9 = tb.origin + '16 -16 -24';
+	
+	local float pct1 = pointcontents(t1);
+	local float pct2 = pointcontents(t2);
+	local float pct3 = pointcontents(t3);
+	
+	local float pct4 = pointcontents(t4);
+	local float pct5 = pointcontents(t5);
+	local float pct6 = pointcontents(t6);
+	
+	local float pct7 = pointcontents(t7);
+	local float pct8 = pointcontents(t8);
+	local float pct9 = pointcontents(t9);
+	
+	local float pcb1 = pointcontents(b1);
+	local float pcb2 = pointcontents(b2);
+	local float pcb3 = pointcontents(b3);
+	
+	local float pcb4 = pointcontents(b4);
+	local float pcb5 = pointcontents(b5);
+	local float pcb6 = pointcontents(b6);
+	
+	local float pcb7 = pointcontents(b7);
+	local float pcb8 = pointcontents(b8);
+	local float pcb9 = pointcontents(b9);
+	
+	/*
+	bprint(2,strcat(ftos(pointcontents(t1)),"t1\n"));
+	bprint(2,strcat(ftos(pointcontents(t2)),"t2\n"));
+	bprint(2,strcat(ftos(pointcontents(t3)),"t3\n"));
+	bprint(2,strcat(ftos(pointcontents(t4)),"t4\n"));
+	bprint(2,strcat(ftos(pointcontents(t5)),"t5\n"));
+	bprint(2,strcat(ftos(pointcontents(t6)),"t6\n"));
+	
+	bprint(2,strcat(ftos(pointcontents(b1)),"b1\n"));
+	bprint(2,strcat(ftos(pointcontents(b2)),"b2\n"));
+	bprint(2,strcat(ftos(pointcontents(b3)),"b3\n"));
+	bprint(2,strcat(ftos(pointcontents(b4)),"b4\n"));
+	bprint(2,strcat(ftos(pointcontents(b5)),"b5\n"));
+	bprint(2,strcat(ftos(pointcontents(b6)),"b6\n"));
+	*/
+	
+	if(pct1 == CONTENT_SOLID || pct1 == CONTENT_SKY)
+		return 1;
+	if(pct2 == CONTENT_SOLID || pct2 == CONTENT_SKY)
+		return 1;
+	if(pct3 == CONTENT_SOLID || pct3 == CONTENT_SKY)
+		return 1;
 		
-	return blockages;
+	if(pct4 == CONTENT_SOLID || pct4 == CONTENT_SKY)
+		return 1;
+	if(pct5 == CONTENT_SOLID || pct5 == CONTENT_SKY)
+		return 1;
+	if(pct6 == CONTENT_SOLID || pct6 == CONTENT_SKY)
+		return 1;
+		
+	if(pct7 == CONTENT_SOLID || pct7 == CONTENT_SKY)
+		return 1;
+	if(pct8 == CONTENT_SOLID || pct8 == CONTENT_SKY)
+		return 1;
+	if(pct9 == CONTENT_SOLID || pct9 == CONTENT_SKY)
+		return 1;
+		
+	if(pcb1 == CONTENT_SOLID || pcb1 == CONTENT_SKY)
+		return 1;
+	if(pcb2 == CONTENT_SOLID || pcb2 == CONTENT_SKY)
+		return 1;
+	if(pcb3 == CONTENT_SOLID || pcb3 == CONTENT_SKY)
+		return 1;
+		
+	if(pcb4 == CONTENT_SOLID || pcb4 == CONTENT_SKY)
+		return 1;
+	if(pcb5 == CONTENT_SOLID || pcb5 == CONTENT_SKY)
+		return 1;
+	if(pcb6 == CONTENT_SOLID || pcb6 == CONTENT_SKY)
+		return 1;
+		
+	if(pcb7 == CONTENT_SOLID || pcb7 == CONTENT_SKY)
+		return 1;
+	if(pcb8 == CONTENT_SOLID || pcb8 == CONTENT_SKY)
+		return 1;
+	if(pcb9 == CONTENT_SOLID || pcb9 == CONTENT_SKY)
+		return 1;
+
+	
+	traceline(t1,b1,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t2,b2,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t3,b3,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+	
+	traceline(t4,b4,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t5,b5,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t6,b6,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t7,b7,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t8,b8,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+		
+	traceline(t9,b9,0,tb);
+	if(trace_fraction != 1 && !trace_ent.takedamage)
+		return 1;
+
+	return 0;
 
 	
 };
@@ -340,9 +466,11 @@ void Teleport2Ball () =
 		return;
 
 	
-	//tracebox(tb.origin + '0 0 -32', VEC_HULL_MIN, VEC_HULL_MAX, tb.origin + '0 0 32', FALSE, tb);
-	tracebox(tb.origin, VEC_HULL_MIN, VEC_HULL_MAX, tb.origin, FALSE, tb);
-	if (trace_fraction != 1)
+
+	//tracebox(tb.origin, VEC_HULL_MIN, VEC_HULL_MAX, tb.origin, FALSE, tb);
+
+	//if (trace_fraction != 1)
+	if(IsTeleBlocked(tb) == 1)
 	{
 		if (trace_ent.classname == "worldspawn")
 		{
@@ -351,12 +479,7 @@ void Teleport2Ball () =
 			return;
 		}
 	}
-	/*if(IsTeleBlocked(tb))
-	{
-		sprint(self, PRINT_HIGH, "teleport obstructed.\n");
-		stuffcmd(self, "play beta1/error.wav\n");
-		return;
-	}*/
+
 	
 	spawn_tfog(self.origin);
 	spawn_tfog(tb.origin + 32 * v_forward);
@@ -364,7 +487,7 @@ void Teleport2Ball () =
 
 	
 	
-	//tracebox (self.origin, VEC_HULL_MIN, VEC_HULL_MAX, self.origin + '0 0 16', FALSE, self); 
+
 	setorigin(self, tb.origin);
 	remove(tb);
 };
@@ -752,8 +875,8 @@ void C4_Explode() =
 	}
 	self.voided = 1;
 
-	T_RadiusDamage (self, self.owner, C4DAMAGE_EXPLODE, world, "c4");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+	MCP_RadiusDamage (self, self.owner, C4DAMAGE_EXPLODE, world, "c4", 1);
+
 	FO_Sound(self, CHAN_ITEM, "beta1/c4_explode.wav", 1, ATTN_NORM);
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);

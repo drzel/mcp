@@ -19,35 +19,27 @@ void(entity targ, entity attacker) ClientObituary =
 	if (targ.classname == "player")
 	{
 
-		if (deathmatch > 3)	
-		{
-			if (targ.deathtype == "selfwater")
-			{
-				bprint (PRINT_MEDIUM, targ.netname);
-				bprint (PRINT_MEDIUM," electrocutes himself.\n ");
-				//targ.frags = targ.frags - 1;
-				return;
-			}
-		}
-
 		if (attacker.classname == "teledeath")
 		{
 
-			bprint (PRINT_MEDIUM,targ.netname);
+			//bprint (PRINT_MEDIUM,targ.netname);
 			if(targ.team_no == attacker.team_no)
 			{
-				bprint (PRINT_MEDIUM," was telefragged by teammate ");
+				//bprint (PRINT_MEDIUM," was telefragged by teammate ");
+				bprint (PRINT_MEDIUM,strcat(targ.netname," was telefragged by teammate ",attacker.owner.netname,"\n"));
 			}
 			else
 			{
-				bprint (PRINT_MEDIUM," was telefragged by ");
+				bprint (PRINT_MEDIUM,strcat(targ.netname," was telefragged by ",attacker.owner.netname,"\n"));
 				KillStreak(attacker.owner);
 				SoundTeam (TEAM_RED, world, "beta1/insideout.wav");
 				SoundTeam (TEAM_BLUE, world, "beta1/insideout.wav");
+				AddStat(attacker.owner, STAT_SPECIALKILL, ROLE_SUPPORT);
+				AddStat(targ, STAT_DEATH, 1);
 			}
 				
-			bprint (PRINT_MEDIUM,attacker.owner.netname);
-			bprint (PRINT_MEDIUM,"\n");
+			//bprint (PRINT_MEDIUM,attacker.owner.netname);
+			//bprint (PRINT_MEDIUM,"\n");
 			KillSound(targ,attacker);
 			//logfrag (attacker.owner, targ);
 
@@ -55,28 +47,28 @@ void(entity targ, entity attacker) ClientObituary =
 			return;
 		}
 
-		if (attacker.classname == "teledeath2")
-		{
-			bprint (PRINT_MEDIUM,"Satan's power deflects ");
-			bprint (PRINT_MEDIUM,targ.netname);
-			bprint (PRINT_MEDIUM,"'s telefrag\n");
-
-			//targ.frags = targ.frags - 1;
-			//logfrag (targ, targ);
-			return;
-		}
-
-		// double 666 telefrag (can happen often in deathmatch 4)
-		if (attacker.classname == "teledeath3") 
-		{
-			bprint (PRINT_MEDIUM,targ.netname);
-			bprint (PRINT_MEDIUM," was telefragged by ");
-			bprint (PRINT_MEDIUM,attacker.owner.netname);
-			bprint (PRINT_MEDIUM, "'s Satan's power\n");
-			//targ.frags = targ.frags - 1;
-			//logfrag (targ, targ);
-			return;
-		}
+//		if (attacker.classname == "teledeath2")
+//		{
+//			bprint (PRINT_MEDIUM,"Satan's power deflects ");
+//			bprint (PRINT_MEDIUM,targ.netname);
+//			bprint (PRINT_MEDIUM,"'s telefrag\n");
+//
+//			//targ.frags = targ.frags - 1;
+//			//logfrag (targ, targ);
+//			return;
+//		}
+//
+//		// double 666 telefrag (can happen often in deathmatch 4)
+//		if (attacker.classname == "teledeath3") 
+//		{
+//			bprint (PRINT_MEDIUM,targ.netname);
+//			bprint (PRINT_MEDIUM," was telefragged by ");
+//			bprint (PRINT_MEDIUM,attacker.owner.netname);
+//			bprint (PRINT_MEDIUM, "'s Satan's power\n");
+//			//targ.frags = targ.frags - 1;
+//			//logfrag (targ, targ);
+//			return;
+//		}
 	
 
 		if (targ.deathtype == "squish")
@@ -114,33 +106,58 @@ void(entity targ, entity attacker) ClientObituary =
 			if (targ == attacker)
 			{
 				// killed self
-				//logfrag (attacker, attacker);
-				//attacker.frags = attacker.frags - 1;
-				bprint (PRINT_MEDIUM,targ.netname);
-				if (targ.deathtype == "grenade")
-					bprint (PRINT_MEDIUM," tries to put the pin back in\n");
-				else if (targ.deathtype == "rocket")
-					bprint (PRINT_MEDIUM," becomes bored with life\n");
-				else if (targ.deathtype == "sticky_direct")
-					bprint (PRINT_MEDIUM," got too close with his sticky launcher\n");
-				else if (targ.deathtype == "sticky_trap")
-					bprint (PRINT_MEDIUM," got caught in their own sticky trap\n");
-				else if (targ.deathtype == "grenade_leech")
-					bprint (PRINT_MEDIUM," succumbed to their own leeches\n");
+
+				
+				AddStat(attacker, STAT_SUICIDE, 1);
+
+				
+			
+				//CLASS GRENADES
+
+				//ass											
+				if (targ.deathtype == "grenade_flash")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " was incinerated by their own flash grenade\n"));
+
+					
+				//fig
 				else if (targ.deathtype == "grenade_frag")
-					bprint (PRINT_MEDIUM," regrets using a frag grenade\n");
-				else if (targ.deathtype == "grenade_flash")
-					bprint (PRINT_MEDIUM," was incinerated by their own flash grenade\n");
-				else if (targ.deathtype == "clustermini_aoe")
-					bprint (PRINT_MEDIUM," got too close to his own spam\n");
-				else if (targ.deathtype == "clustermini_direct")
-					bprint (PRINT_MEDIUM," got too close to his own spam\n");
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " regrets using a frag grenade\n"));
+					
+				//bomb
+				else if (targ.deathtype == "grenade_marker")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " accidentally marked themself\n"));
+
+								
+				//supp
+				else if (targ.deathtype == "grenade_leech")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " succumbed to their own leeches\n"));	
+				
+				
+				//CLASS WEAPONS 1-4
+				//fighter
+				else if (targ.deathtype == "rocket")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " becomes bored with life\n"));
+				else if (targ.deathtype == "rocket_direct")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " becomes bored with life\n"));
+				else if (targ.deathtype == "rocket_directharp")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " becomes bored with life\n"));	
+				//bomber 
 				else if (targ.deathtype == "clusterbig_direct")
-					bprint (PRINT_MEDIUM," got too close to his own spam\n");
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " ate his own pineapple\n"));
+				else if (targ.deathtype == "clustermini_direct")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " ate his own pineapple\n"));
+				else if (targ.deathtype == "clustermini_aoe")
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " ate his own pineapple\n"));	
+
+				
+				//CLASS SPECIALS
+				//bomber
 				else if (targ.deathtype == "c4")
-					bprint (PRINT_MEDIUM," set the detpack and forgot to run\n");
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " set the detpack and forgot to run\n"));
+
+
 				else
-					bprint (PRINT_MEDIUM," becomes bored with life\n");
+					bprint (PRINT_MEDIUM,strcat(targ.netname, " hates life\n"));
 				return;
 			}
 			else if ( (teamplay == 2) && (targteam == attackerteam) &&
@@ -156,114 +173,76 @@ void(entity targ, entity attacker) ClientObituary =
 					deathstring = " loses another friend\n";
 				bprint (PRINT_MEDIUM, attacker.netname);
 				bprint (PRINT_MEDIUM, deathstring);
-				//attacker.frags = attacker.frags - 1;
-				//ZOID 12-13-96:  killing a teammate logs as suicide
-				//logfrag (attacker, attacker);
+
 				return;
 			}
 			else
 			{
-				//logfrag (attacker, targ);
-				//attacker.frags = attacker.frags + 1;
+
 				KillStreak(attacker);
 				rnum = attacker.weapon;
-				if (targ.deathtype == "nail")
+				
+				//MISC
+				if (targ.deathtype == "goomba_stomp")
 				{
-					deathstring = " was nailed by ";
-					deathstring2 = "\n";
+					deathstring = " was goomba stomped by ";
+					deathstring2 = "\n" ;
+					SoundTeam (TEAM_RED, world, "beta1/gstomp_kill.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/gstomp_kill.wav");
+					AddStat(attacker, STAT_STOMPKILL, attacker.role);
+					AddStat(targ, STAT_DEATH, 1);
 				}
-				else if (targ.deathtype == "supernail")
+				
+				//GRENADES
+				else if (targ.deathtype == "grenade_flash")
 				{
-					deathstring = " was punctured by ";
-					deathstring2 = "\n";
+					deathstring = " is charred by ";
+					deathstring2 = "'s flash grenade\n" ;
+					SoundTeam (TEAM_RED, world, "beta1/toasty.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/toasty.wav");
+					AddStat(attacker, STAT_GRENKILL, ROLE_ASSASSIN);
+					AddStat(targ, STAT_DEATH, 1);
 				}
-				else if (targ.deathtype == "grenade")
+				else if (targ.deathtype == "grenade_frag")
 				{
-					deathstring = " eats ";
-					deathstring2 = "'s pineapple\n";
-					if (targ.health < -40)
-					{
-						deathstring = " was gibbed by ";
-						deathstring2 = "'s grenade\n";
-					}
+					deathstring = " played catch with ";
+					deathstring2 = "'s frag grenade\n" ;
+					AddStat(attacker, STAT_GRENKILL, ROLE_FIGHTER);
+					AddStat(targ, STAT_DEATH, 1);
+				
 				}
-				else if (targ.deathtype == "rocket")
+				else if (targ.deathtype == "grenade_marker")
 				{
-					if (attacker.super_damage_finished > 0 && targ.health < -40)
-					{
-						rnum = random();
-						if (rnum < 0.3)
-							deathstring = " was brutalized by ";
-						else if (rnum < 0.6)
-							deathstring = " was smeared by ";
-						else
-						{
-							bprint (PRINT_MEDIUM, attacker.netname);
-							bprint (PRINT_MEDIUM, " rips ");
-							bprint (PRINT_MEDIUM, targ.netname);
-							bprint (PRINT_MEDIUM, " a new one\n");
-							return;
-						}
-						deathstring2 = "'s quad rocket\n";
-					}
-					else
-					{
-						deathstring = " rides ";
-						deathstring2 = "'s rocket\n";
-						if (targ.health < -40)
-						{
-							deathstring = " was gibbed by ";
-							deathstring2 = "'s rocket\n" ;
-						}
-					}
+					deathstring = " couldnt handle being marked by ";
+					deathstring2 ="'s marker grenade\n" ;
+					AddStat(attacker, STAT_GRENKILL, ROLE_BOMBER);
+					AddStat(targ, STAT_DEATH, 1);
+					
 				}
+				else if (targ.deathtype == "grenade_leech")
+				{
+					deathstring = " was sucked dry by ";
+					deathstring2 = "'s leech grenade\n" ;
+					AddStat(attacker, STAT_GRENKILL, ROLE_SUPPORT);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				
+				//SPECIALS
 				else if (targ.deathtype == "harpoon")
 				{
 					deathstring = " was harpooned by ";
 					deathstring2 = "\n";
 					SoundTeam (TEAM_RED, world, "beta1/humiliation.wav");
 					SoundTeam (TEAM_BLUE, world, "beta1/humiliation.wav");
-				}
-				else if (targ.deathtype == "beartrap")
-				{
-					deathstring = " stepped on ";
-					deathstring2 = "'s bear trap\n";
+					AddStat(attacker, STAT_SPECIALKILL, ROLE_FIGHTER);
+					AddStat(targ, STAT_DEATH, 1);
 				}
 				else if (targ.deathtype == "c4")
 				{
 					deathstring = " reaches orbit via ";
 					deathstring2 = "'s detpack\n";
-				}
-				else if (targ.deathtype == "rocket_direct")
-				{
-					deathstring = " eats a direct rocket from ";
-					deathstring2 = "\n";
-				}
-				else if (targ.deathtype == "rocket_directquad")
-				{
-					deathstring = " was combo'd by ";
-					deathstring2 = "\n";
-					SoundTeam (TEAM_RED, world, "beta1/voice_combowhore.wav");
-					SoundTeam (TEAM_BLUE, world, "beta1/voice_combowhore.wav");
-				}
-
-				/*else if (targ.deathtype == "sticky_trap")
-				{
-					deathstring = " is caught by ";
-					deathstring2 = "'s sticky trap\n" ;
-				
-				}
-				else if (targ.deathtype == "sticky_direct")
-				{
-					deathstring = " caught a direct sticky from ";
-					deathstring2 = "\n" ;
-				
-				}*/
-				else if (targ.deathtype == "clusterbig_direct")
-				{
-					deathstring = " caught a direct pineapple from ";
-					deathstring2 = "\n" ;
-
+					AddStat(attacker, STAT_SPECIALKILL, ROLE_BOMBER);
+					AddStat(targ, STAT_DEATH, 1);
 				}
 				else if (targ.deathtype == "shouldercharge")
 				{
@@ -271,113 +250,150 @@ void(entity targ, entity attacker) ClientObituary =
 					deathstring2 = "\n" ;
 					SoundTeam (TEAM_RED, world, "beta1/thomas.wav");
 					SoundTeam (TEAM_BLUE, world, "beta1/thomas.wav");
+					AddStat(attacker, STAT_SPECIALKILL, ROLE_MGUNNER);
+					AddStat(targ, STAT_DEATH, 1);
 
 				}
+				
+				//WEAPONS 1-4
+				//MELEE
+				else if (rnum == WPN_AXE)
+				{
+					if(attacker.role == ROLE_ASSASSIN)
+					{
+						deathstring = " was executed by ";
+						deathstring2 = "\n";
+						SoundTeam (TEAM_RED, world, "beta1/humiliation.wav");
+						SoundTeam (TEAM_BLUE, world, "beta1/humiliation.wav");	
+					}
+					else
+					{
+						deathstring = " was ax-murdered by ";
+						deathstring2 = "\n";
+						SoundTeam (TEAM_RED, world, "beta1/humiliation.wav");
+						SoundTeam (TEAM_BLUE, world, "beta1/humiliation.wav");
+					}
+					AddStat(attacker, STAT_MELEEKILL, attacker.role);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				
+				//SHOTGUN
+				else if (rnum == WPN_SHOTGUN)
+				{
+					deathstring = " chewed on ";
+					deathstring2 = "'s boomstick\n";
+					
+					AddStat(attacker, STAT_TERTIARYKILL, attacker.role);
+					AddStat(targ, STAT_DEATH, 1);
 
+				}
+				
+				//SUPERSHOTGUN
+				else if (rnum == WPN_SUPERSHOTGUN)
+				{
+					deathstring = " ate 2 loads of ";
+					deathstring2 = "'s buckshot\n";
+					AddStat(attacker, STAT_SECONDARYKILL, attacker.role);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+
+				//PRIMARY
+				//recon
+				else if (targ.deathtype == "supernail")
+				{
+					deathstring = " was punctured by ";
+					deathstring2 = "\n";
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_RECON);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				//assassin
+				else if (rnum == WPN_RAILGUN)
+				{
+					if(attacker.heat == 3)
+					{
+						deathstring = " was railed by ";
+						deathstring2 = " (3x)\n";
+					}
+					else if (attacker.heat == 2)
+					{
+						deathstring = " was railed by ";
+						deathstring2 = " (2x)\n";
+					}
+					else
+					{
+						deathstring = " was railed by ";
+						deathstring2 = "\n";
+					}
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_ASSASSIN);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				//figher
+				else if (targ.deathtype == "rocket")
+				{
+					deathstring = " rides ";
+					deathstring2 = "'s rocket\n";
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_FIGHTER);
+					AddStat(targ, STAT_DEATH, 1);
+
+				}
+				else if (targ.deathtype == "rocket_direct")
+				{
+					deathstring = " eats a direct rocket from ";
+					deathstring2 = "\n";
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_FIGHTER);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				else if (targ.deathtype == "rocket_directharp")
+				{
+					deathstring = " was combo'd by ";
+					deathstring2 = "\n";
+					SoundTeam (TEAM_RED, world, "beta1/voice_combowhore.wav");
+					SoundTeam (TEAM_BLUE, world, "beta1/voice_combowhore.wav");
+					AddStat(attacker, STAT_HARPOONCOMBOKILL, 1);
+					AddStat(targ, STAT_DEATH, 1);
+				}
+				//bomber
+				else if (targ.deathtype == "clusterbig_direct")
+				{
+					deathstring = " caught a direct pineapple from ";
+					deathstring2 = "\n" ;
+					AddStat(attacker, STAT_PRIMARYKILL,ROLE_BOMBER);
+					AddStat(targ, STAT_DEATH, 1);
+
+				}
 				else if (targ.deathtype == "clustermini_direct")
 				{
 					deathstring = " caught a direct mini-pineapple from ";
 					deathstring2 = "\n" ;
-				
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_BOMBER);
+					AddStat(targ, STAT_DEATH, 1);
 				}
 
 				else if (targ.deathtype == "clustermini_aoe")
 				{
 					deathstring = " succumbed to ";
 					deathstring2 = "'s mini-pineapple spam\n" ;
-				
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_BOMBER);
+					AddStat(targ, STAT_DEATH, 1);
 				}
-
-
-				else if (targ.deathtype == "grenade_leech")
-				{
-					deathstring = " was sucked dry by ";
-					deathstring2 = "'s leech grenade\n" ;
-				
-				}
-
-				else if (targ.deathtype == "grenade_frag")
-				{
-					deathstring = " played catch with ";
-					deathstring2 = "'s frag grenade\n" ;
-				
-				}
-
-				
-				
-				
-				
-				else if (targ.deathtype == "grenade_flash")
-				{
-					deathstring = " is charred by ";
-					deathstring2 = "'s flash grenade\n" ;
-					SoundTeam (TEAM_RED, world, "beta1/toasty.wav");
-					SoundTeam (TEAM_BLUE, world, "beta1/toasty.wav");
-				}
-
-				/*else if (targ.deathtype == "grenade_bigproxy")
-				{
-					deathstring = " couldnt outrun ";
-					deathstring2 = "'s proxy grenade\n" ;
-				
-				}
-				else if (targ.deathtype == "grenade_littleproxy")
-				{
-					deathstring = " got too close to ";
-					deathstring2 = "'s proxy grenade\n" ;
-				
-				}*/
-				else if (targ.deathtype == "goomba_stomp")
-				{
-					deathstring = " was goomba stomped by ";
-					deathstring2 = "\n" ;
-					SoundTeam (TEAM_RED, world, "beta1/gstomp_kill.wav");
-					SoundTeam (TEAM_BLUE, world, "beta1/gstomp_kill.wav");
-				}
-				else if (rnum == WPN_AXE)
-				{
-				if(attacker.role == ROLE_ASSASSIN)
-				{
-					deathstring = " was executed by ";
-					deathstring2 = "\n";
-					SoundTeam (TEAM_RED, world, "beta1/humiliation.wav");
-					SoundTeam (TEAM_BLUE, world, "beta1/humiliation.wav");
-					
-				}
-				else
-				{
-					deathstring = " was ax-murdered by ";
-					deathstring2 = "\n";
-					SoundTeam (TEAM_RED, world, "beta1/humiliation.wav");
-					SoundTeam (TEAM_BLUE, world, "beta1/humiliation.wav");
-				}
-				}
-				else if (rnum == WPN_SHOTGUN)
-				{
-					deathstring = " chewed on ";
-					deathstring2 = "'s boomstick\n";
-				}
-				else if (rnum == WPN_SUPERSHOTGUN)
-				{
-					deathstring = " ate 2 loads of ";
-					deathstring2 = "'s buckshot\n";
-				}
+				//support
 				else if (rnum == WPN_SHAFT)
 				{
 					deathstring = " accepts ";
 					deathstring2 = "'s shaft\n";
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_SUPPORT);
+					AddStat(targ, STAT_DEATH, 1);
 				}
-				else if (rnum == WPN_RAILGUN)
-				{
-					deathstring = " was railed by ";
-					deathstring2 = "\n";
-				}
+				//minigunner
 				else if (rnum == WPN_MINIGUN)
 				{
-					
 					deathstring = " was gunned down by ";
 					deathstring2 = "'s minigun\n";
+					AddStat(attacker, STAT_PRIMARYKILL, ROLE_MGUNNER);
+					AddStat(targ, STAT_DEATH, 1);
 				}
+				
+
 				bprint (PRINT_MEDIUM,targ.netname);
 				bprint (PRINT_MEDIUM,deathstring);
 				bprint (PRINT_MEDIUM,attacker.netname);
@@ -387,6 +403,7 @@ void(entity targ, entity attacker) ClientObituary =
 		}
 		else
 		{
+			AddStat(targ, STAT_WORLDDEATH, 1);
 			//logfrag (targ, targ);
 			//targ.frags = targ.frags - 1;            // killed self
 			rnum = targ.watertype;
@@ -464,6 +481,9 @@ void(entity targ, entity attacker) ClientObituary =
 void KillStreak(entity player) =
 {
 	player.killstreakcount = player.killstreakcount + 1;
+	AddStat(player, STAT_KILLSTREAK, player.killstreakcount);
+
+		
 	if(player.killstreakcount < 3)
 		return;
 		

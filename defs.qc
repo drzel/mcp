@@ -785,6 +785,7 @@ float playerdims;	//used player dimensions
 .float playerstate;
 .float isconnected;
 .float ismoving;
+.float hasbeenmidaired;
 .float nextrespawn;
 .float nextpingpoint;
 .float killstreakcount;
@@ -820,9 +821,76 @@ string cprint_waitingforplayers;
 .string cprint_obj;
 .string cprint_id;
 .float cprint_time;
+.string awardshowstring;
 
 //.float hasstomped;
 //.float isleaping;
+typedef struct {
+	float primaryshots;
+	float primaryhits;
+	float primarykills;
+
+	float secondaryshots;
+	float secondaryhits;
+	float secondarykills;
+
+	float tertiaryshots;
+	float tertiaryhits;
+	float tertiarykills;
+
+	float meleeshots;
+	float meleehits;
+	float meleekills;
+	
+	float specialshots;
+	float specialhits;
+	float specialkills;
+	
+	float grenprimes;
+	float grenhits;
+	float grenkills;
+	float grensticky;
+} WeapStatStruct;
+
+
+
+typedef struct {
+	float flagtouches;
+	float flagcaps;
+	float flagsteals;
+	float flagsacks;
+	float flagtrailtouches;
+	float flagthrows;
+	float flagdeaths;
+	
+	float dmgtaken;
+	float dmggiven;
+	float dmgself;
+	float dmgworld;
+	
+	float kills;
+	float deaths;
+	float suicides;
+	float worlddeaths;
+	
+	float stompkills;
+	float bestkillstreak;
+	float ghostsbusted;
+	float accuracyawards;
+	float harpooncombokills;
+	float directrockets;
+	float directpineapples;
+	float midairrockets;
+	float midairpineapples;
+	float bestrocketmidairdist;
+	float bestrocketmidairconsec;
+
+
+} PlayerStatStruct;
+
+.WeapStatStruct weapstats[7];
+.PlayerStatStruct playerstats;
+
 
 .float cloak_complete;
 .float iscloaked;
@@ -832,6 +900,63 @@ string cprint_waitingforplayers;
 .float FlashTime;
 
 
+
+
+
+
+
+
+
+#define STAT_DMGGIVEN		1
+#define STAT_DMGTAKEN		2
+#define STAT_DMGSELF		3
+#define STAT_DMGWORLD		4
+
+#define STAT_MELEEKILL		5	
+#define STAT_SECONDARYKILL	6
+#define STAT_PRIMARYKILL	7
+#define STAT_TERTIARYKILL	8
+#define STAT_SPECIALKILL	9
+#define STAT_GRENKILL		10
+
+#define STAT_DEATH		11
+#define STAT_SUICIDE		12
+#define STAT_KILL		13
+#define STAT_WORLDDEATH		14
+
+#define STAT_FLAGTOUCH		15
+#define STAT_FLAGCAP		16
+#define STAT_FLAGSTEAL		17
+#define STAT_FLAGCARRIERKILLED	18
+#define STAT_FLAGTHROW		19
+#define STAT_FLAGDIEDWITH	20
+#define STAT_FLAGTRAILTOUCH	21
+
+#define STAT_KILLSTREAK		22
+#define STAT_GHOSTBUST		23
+#define STAT_STOMPKILL		24
+
+
+#define STAT_HARPOONCOMBOKILL	25
+#define STAT_WEAPONHIT		26
+#define STAT_WEAPONFIRED	27
+#define STAT_GRENPRIMED		28
+#define STAT_GRENHIT		29
+#define STAT_DIRECTPINEAPPLE	30
+
+#define STAT_ACCURACYAWARD	31
+#define STAT_ROCKETDIRECT	32
+#define STAT_ROCKETMIDAIR	33
+#define STAT_ROCKETMIDAIRDIST	34
+
+
+
+
+
+
+
+
+
 // Dimensions
 #define DMN_FLASH 1 // when flashed, we set dimension see to this
 #define DMN_NOFLASH	256	// see all the things
@@ -839,7 +964,7 @@ string cprint_waitingforplayers;
 #define DIM_WORLD		1
 #define DIM_BLUETEAM		2
 #define DIM_REDTEAM		4
-#define DIM_SPECONLY		8
+#define DIM_FLAG		8
 #define DIM_PLAYER1		16
 #define DIM_PLAYER2		32
 #define DIM_PLAYER3		64
@@ -860,13 +985,14 @@ string cprint_waitingforplayers;
 #define DIM_PLAYER18		2097152
 #define DIM_PLAYER19		4194304
 #define DIM_PLAYER20		8388608
+//#define DIM_FLAG		16777216
 //#define DIM_EVERYTHING		16777216
 
 //check if contains	if (self.playerstate & PLAYERSTATE_RELOADING)
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.5\s (09/apr/2021)"
+#define MCPVERSION				"version \sbeta 1.8\s (16/apr/2021)"
 
 #define FLAG_RESET				15
 #define FLAG_TOSSSPEED				600
@@ -886,6 +1012,8 @@ string cprint_waitingforplayers;
 #define WPN_ROCKETLAUNCHER			7
 #define WPN_SHAFT				8
 #define WPN_MINIGUN				9
+
+
 
 #define MINIGUNSTATE_NONE			0
 #define MINIGUNSTATE_SPINNINGUP			1
@@ -941,7 +1069,7 @@ string cprint_waitingforplayers;
 
 
 
-#define FLASH_DURATION				2
+#define FLASH_DURATION				5
 //#define SPECIAL_COOLDOWN_RECON			1
 //#define SPECIAL_COOLDOWN_ASSASSIN		20
 //#define SPECIAL_COOLDOWN_FIGHTER		3
@@ -1143,6 +1271,8 @@ string cprint_waitingforplayers;
 
 #define IMP_1HP				199
 #define IMP_CREATEPING			200
+#define IMP_PRINTSTATS			201
+
 
 #define IMP_NULL			666
 //IMPULSE -- END
@@ -1151,6 +1281,6 @@ string cprint_waitingforplayers;
 #define MCPFLAG_SKIN_BLUE			1	
 #define MCPFLAG_SKIN_RED			2
 
-
+#define FPATH_PLAYERMDL		 "progs/beta1/mcp_player3.mdl"
 
 

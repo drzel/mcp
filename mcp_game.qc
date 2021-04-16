@@ -69,7 +69,7 @@ void sprite_touch() =
 			//l3 = "\sgrenade:\s (beartrap) - does significant damage to enemies who step on it, can be shot and destroyed\n";
 			//l4 = "\sspecial:\s (detonate) - explodes any stickys you have\n";
 			l2 = "\sweapon :\s (grenlauncher) - shoots a grenade that splits into smaller grenades\n";
-			l3 = "\sgrenade:\s (frag) - high damage grenade\n";
+			l3 = "\sgrenade:\s (marker) - marks a target for a short time, grenade launcher grenades bounce towards target\n";
 			l4 = "\sspecial:\s (detpack) - press once to throw a detpack, again to detonate detpack\n";
 			l5 = "\spassive:\s (health and armour regen) -  slowly regens health and armour\n";
 				
@@ -157,6 +157,7 @@ void info_mcpflag_spawn () =
 
 void info_mcpflag_capture () =
 {
+	//self.classname = "flagcappoint";
 	self.solid = SOLID_TRIGGER;
 	self.touch = mcpflagcap_touch;
 	setsize (self, '-16 -16 -32', '16 16 32');
@@ -185,6 +186,8 @@ void DeathMCPFlag () =
 	if(mcpflag.owner != self)
 		return;
 		
+		
+	AddStat(self, STAT_FLAGDIEDWITH, 1);	
 	ChangeMCPFlagState(MCPFLAGSTATE_DROPPED, self);
 	self.items = self.items - (self.items & IT_KEY1);
 };
@@ -403,6 +406,7 @@ void flagtrail_touch() =
 			{
 				FO_Sound(self, CHAN_ITEM, "beta1/pacman.wav", 1, ATTN_NORM);
 				mcpflag.heat = time + 0.35;
+				AddStat(other, STAT_FLAGTRAILTOUCH, 1);
 			}
 			if(other.health < 100)
 				other.health = other.health + 1;
@@ -454,7 +458,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 		SoundTeam (TEAM_RED, world, "beta1/flagevent.wav");
 		SoundTeam (TEAM_BLUE, world, "beta1/flagevent.wav");
 		bprint(2, "\sthe flag has spawned!\s\n");
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_FLAG);
 		setorigin(mcpflag,mcpflagspawn.origin);
 		spawn_tfog(mcpflagspawn.origin);
 		mcpflag.owner = gm;
@@ -492,9 +496,11 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_GREEN;
 		}
 		bprint(2, strcat(mcpflag.owner.netname, " \shas thrown the flag!\s\n"));
+		if(!(mcpflag.owner.dimension_see & DIM_FLAG)  && mcpflag.owner.FlashTime <= 0)
+			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
+		AddStat(mcpflag.owner, STAT_FLAGTHROW, 1);
 		
-		
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_FLAG);
 		mcpflag.angles = '0 0 0';
 		mcpflag.owner = gm;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
@@ -526,10 +532,12 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_GREEN;
 		}
 		bprint(2, strcat(mcpflag.owner.netname, " \sdropped the flag!\s\n"));
+		if(!(mcpflag.owner.dimension_see & DIM_FLAG) && mcpflag.owner.FlashTime <= 0)
+			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
 		mcpflag.owner = gm;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
 		
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_FLAG);
 		mcpflag.origin = o.origin;
 
 		mcpflag.velocity_z = 300;
@@ -570,10 +578,22 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_RED;
 		}
 		bprint(2, strcat(o.netname, " \shas picked up the flag!\s\n"));
+		
+		if(mcpflag.owner.classname == "info_mcpflag_capture")
+			AddStat(o, STAT_FLAGSTEAL, 1);
+		else
+			AddStat(o, STAT_FLAGTOUCH, 1);
+		
+		if(ContainsVisDimension(o,DIM_FLAG))
+		{
+			RemoveVisDimension(o, DIM_FLAG);
+		}
+			
 		mcpflag.owner = o;
+		
 		local vector org = o.origin + '-15 0 0';
 		setorigin (mcpflag, org);
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_FLAG);
 		mcpflag.view_ofs = mcpflag.origin - o.origin;
 		o.items = o.items | IT_KEY1;
 		mcpflag.skin = MCPFLAG_SKIN_WHITE;
@@ -615,10 +635,12 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 			mcpflag.effects = mcpflag.effects | EF_DIMLIGHT;
 			mcpflag.effects = mcpflag.effects | EF_RED;
 		}
-		
+		AddStat(mcpflag.owner, STAT_FLAGCAP, 1);
+		if(!(mcpflag.owner.dimension_see & DIM_FLAG)  && mcpflag.owner.FlashTime <= 0)
+			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
 		mcpflag.owner = o;
 		mcpflag.angles = '0 0 0';
-		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_WORLD);
+		FO_SetModel(mcpflag,"progs/beta1/mcp_flag.mdl", DIM_FLAG);
 		setorigin(mcpflag,o.origin);
 		spawn_tfog(o.origin);	
 		

@@ -22,7 +22,7 @@ void ThrownGrenade_Think() = {
 		else if(self.role == ROLE_BOMBER)
 		{
 			//self.think = ExplodeBearTrap;
-			self.think = ExplodeFragGrenade;
+			self.think = ExplodeMarkerGrenade;
 		}
 		else if(self.role == ROLE_RECON)
 		{
@@ -162,7 +162,7 @@ void ThrowGrenade() = {
 
 
 
-void DestroyBearTrap() =
+/*void DestroyBearTrap() =
 {
 	FO_Sound(self, CHAN_WEAPON, "beta1/beartrap_break.wav", 1, ATTN_NORM);
 	local	entity gib1 = spawn();
@@ -184,17 +184,22 @@ void DestroyBearTrap() =
 
 	
 	remove(self);
-};
+};*/
 
 void ExplodePushupGrenade() =
 {
 	local entity head = findradius(self.origin, PUSHUPGREN_RADIUS + 40);
 	local float points;
-	
+	local float enemyhit = 0;
 	while (head)
 	{
 		if (head.takedamage && head.classname == "player")
 		{
+			if(head.team_no != self.owner.team_no)
+			{
+				enemyhit = 1;
+				HitSound(head, self, self.owner, 0);
+			}
 			points = vlen (self.origin - head.origin);
 			points = PUSHUPGREN_RADIUS - points;
 			if (points > PUSHUPGREN_RADIUS)
@@ -217,7 +222,11 @@ void ExplodePushupGrenade() =
 		}
 		head = head.chain;
 	}
-	
+	if(enemyhit)
+	{
+		AddStat(self.owner, STAT_GRENHIT, ROLE_MGUNNER);
+
+	}
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte(MSG_MULTICAST, TE_TAREXPLOSION);
 	WriteCoord(MSG_MULTICAST, self.origin_x);
@@ -230,8 +239,110 @@ void ExplodePushupGrenade() =
 
 void () ExplodeFragGrenade = {
 
-		T_RadiusDamage(self, self.owner, 180, world,"grenade_frag");
-    ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+	MCP_RadiusDamage(self, self.owner, 180, world,"grenade_frag", 1);
+
+    WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
+    WriteByte(MSG_MULTICAST, TE_EXPLOSION);
+    WriteCoord(MSG_MULTICAST, self.origin_x);
+    WriteCoord(MSG_MULTICAST, self.origin_y);
+    WriteCoord(MSG_MULTICAST, self.origin_z);
+
+    multicast(self.origin, MULTICAST_PHS);
+    remove(self);
+};
+
+void marker_think() =
+{
+	if(time > self.bubble_count)
+	{
+		sprint(self.owner, PRINT_HIGH, "you are no longer marked.\n");
+		remove(self);
+		return;
+	}
+	if(self.model == "" && self.gren.pdim != 0)
+	{
+		FO_SetModel(self,"progs/beta1/mcp_pingt1.spr", self.gren.pdim);
+		self.frame = 5;
+	}
+	setorigin(self, self.owner.origin + '0 0 48');
+	self.nextthink = time + 0.05;
+};
+
+void MarkPlayer(entity targ, entity attacker) =
+{
+	local entity found;
+	local entity te = find(world, classname, "marker");
+	while (te) 
+	{
+		if (te != world) 
+		{
+			if(te.owner == targ && te.gren == attacker)
+				found = te;
+		}
+		te = find(te, classname, "marker");
+	}	
+	if(found != world)
+	{
+		te.bubble_count = time + 5;
+		return;
+	}
+	
+	local entity mark = spawn();
+	mark.classname = "marker";
+	mark.bubble_count = time + 5;
+	mark.think = marker_think;
+	mark.nextthink = time;
+	mark.owner = targ;
+	mark.gren = attacker;
+	sprint(targ, PRINT_HIGH, "you are marked.\n");
+};
+
+void () ExplodeMarkerGrenade = 
+{
+	
+	local entity head = findradius(self.origin, 180+40);
+	local float foundone = 0;
+	
+	while (head)
+	{
+		if (head != world)
+		{
+			if (head.takedamage && CanDamage(head,self))
+			{
+				
+				if(head.classname == "player" && head.team_no != self.owner.team_no)
+				{
+					MarkPlayer(head, self.owner);
+					
+					
+					foundone = foundone + 1;
+				}
+				local vector org = head.origin + (head.mins + head.maxs)*0.5;
+				local float points = 0.5*vlen (self.origin - org);
+				if (points < 0)
+					points = 0;
+				points = (100 - points) / 2;
+				
+				if (head == self.owner)
+					points = points * 0.75;
+				if (points > 0)
+				{
+					if (CanDamage (head, self))
+					{
+						head.deathtype = "grenade_marker";
+						T_Damage (head, self, self.owner, points);
+					}
+				}
+			}
+		}
+		head = head.chain;
+	}
+    if(foundone > 0)
+    {
+	FO_Sound(self, CHAN_WEAPON, "beta1/markplayer.wav", 1, ATTN_NORM);
+	AddStat(self.owner, STAT_GRENHIT, ROLE_BOMBER);
+    }
+    
     WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
     WriteByte(MSG_MULTICAST, TE_EXPLOSION);
     WriteCoord(MSG_MULTICAST, self.origin_x);
@@ -245,9 +356,9 @@ void () ExplodeFragGrenade = {
 void () ExplodeLeechGrenade = {
 
 
-		T_RadiusDamage(self, self.owner, 180, world,"grenade_leech");
+	MCP_RadiusDamage(self, self.owner, 180, world,"grenade_leech", 1);
 		
-    ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+ 
 
     
     WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
@@ -260,123 +371,60 @@ void () ExplodeLeechGrenade = {
     remove(self);
 };
 
-//void StuffFlash(entity te, float amt) =
-//{
-    //string st = ftos(amt);
+void StuffFlash(entity te, float amt)
+{	
+
+    local string st = strcat(ftos(amt)," ",ftos(amt));
     //string cmd = strcat("v_cshift ", st, " ", st);
-    //cmd = strcat(cmd, " ", st, " ", st, "\n");
-    
-   // string cmd = strcat("v_cshift ", ftos(amt), " ", ftos(amt), " ", ftos(amt), "\n");
-    //stuffcmd(te, cmd);
-//};
+    //cmd = strcat(cmd, " ", st, " ", "100", "\n");
+    local string cmd = strcat("v_cshift ",st ," 0 100\n");
+    stuffcmd(te, cmd);
+}
 
-//void () FlashTimer = {
- //local entity te;
-
-//te = self.owner;
-//te.FlashTime = te.FlashTime - 0.6;
-//if (te.FlashTime < 5) {
-//te.FlashTime = 1;
-//stuffcmd(te, "v_cshift; wait; bf\n");
-//remove(self);
-//te.dimension_see = DMN_NOFLASH;
-//te.dimension_seen = DMN_NOFLASH;
-//return;
- //}
-
-//    StuffFlash(te, (te.FlashTime*10));
-
-//    self.nextthink = time + 0.6;
-//};
-
-//void SetFlashDimension(entity te) =
-//{
-    //FO_FlashDimension = ((FO_FlashDimension + 1) == 8) ? DMN_FLASH : FO_FlashDimension + 1;
-    
-    //float playerdimension = 1<<FO_FlashDimension;
-
-    // i hate bitflags and i'm bad so this is probably wrong
-    //te.dimension_see = DMN_FLASH | playerdimension;
-    //te.dimension_seen = playerdimension | DMN_NOFLASH;
-//};
-
-//float FO_CalcFlash(entity te) =
-//{
-    //float timeleft = te.FlashTime;
+float CalcFlash(entity te) =
+{
+	float timeleft = te.FlashTime;
     //float flashAmtMax = 240;
     //float flashAmtMin = 100;
-   // float flashAmtMaxMult = stof(infokey(te, "maxflash"));
+    //float flashAmtMaxMult = stof(infokey(te, "maxflash"));
     //float flashAmtMinMult = stof(infokey(te, "minflash"));
-    //float flashAmt;
+    float flashAmt= 100;
     
     
     //flashAmt = (flashAmtMaxMult > 0) ? flashAmtMax * flashAmtMaxMult : flashAmtMax;
     //flashAmtMin = (flashAmtMinMult > 0) ? flashAmtMin * flashAmtMinMult : flashAmtMin;
     
-    //float perc = timeleft / FLASH_DURATION;
+    float perc = timeleft / FLASH_DURATION;
 
-   // flashAmt = flashAmt * perc;
+    flashAmt = flashAmt * perc;
+    if(flashAmt < 30)
+	flashAmt = 30;
     //flashAmt = flashAmt < flashAmtMin ? flashAmtMin : flashAmt;
-    //return flashAmt;
-//};
-
-//void FO_FlashTimer() =
-//{
-    //local entity te;
-
-    //te = self.owner;
-    //te.FlashTime = te.FlashTime - .1;
-   // if (te.FlashTime <= 0) {
-        //sprint(te, PRINT_HIGH, "flash has worn off\n");
-        //stuffcmd(te, "v_cshift; wait; bf\n");
-        //remove(self);
-        //te.dimension_see = DMN_NOFLASH;
-        //te.dimension_seen = DMN_NOFLASH;
-       // return;
-    //}
-
-    //float flashamount = FO_CalcFlash(te);
-    //StuffFlash(te, flashamount);
-
-    //self.nextthink = time + .1;
-//};
-
-
+    return flashAmt;
+	//return 100;
+};
 
 void mcpflash_think() =
 {
-	if(time >= self.bubble_count)
-	{
-		sprint(self.owner, PRINT_HIGH, "flash has worn off\n");
-		stuffcmd(self.owner, "v_cshift; wait; bf\n");
-		ResetVisDimensions(self.owner);
-		remove(self);
-		return;
-	}
-	
-	local float timeleft = self.bubble_count - time;
-	local float flashAmtMax = 240;
-	local float flashAmtMin = 100;
-	local float flashAmtMaxMult = stof(infokey(self.owner, "maxflash"));
-	local float flashAmtMinMult = stof(infokey(self.owner, "minflash"));
-	local float flashAmt;
-    
-    
-	flashAmt = (flashAmtMaxMult > 0) ? flashAmtMax * flashAmtMaxMult : flashAmtMax;
-	flashAmtMin = (flashAmtMinMult > 0) ? flashAmtMin * flashAmtMinMult : flashAmtMin;
-    
-	local float perc = timeleft / FLASH_DURATION;
+    local entity te;
 
-	flashAmt = flashAmt * perc;
-	flashAmt = flashAmt < flashAmtMin ? flashAmtMin : flashAmt;
-	//bprint(2,strcat(ftos(flashAmt),"flashamt\n"));
-	//StuffFlash(self.owner, flashAmt);
+    te = self.owner;
+    te.FlashTime = te.FlashTime - .1;
+    if (te.FlashTime <= 0) {
+        sprint(te, PRINT_HIGH, "Flash has worn off\n");
+        stuffcmd(te, "v_cshift; wait; bf\n");
+        remove(self);
+        self = te;
+        ResetVisDimensions(self);
+        return;
+    }
+
+    float flashamount = CalcFlash(te);
+    StuffFlash(te, flashamount);
+
+    self.nextthink = time + .1;
 	
-	//local string cmd = strcat(ftos(flashAmt), " ", ftos(flashAmt), " ", ftos(flashAmt)," ", ftos(flashAmt));
-	//stuffcmd(self.owner, strcat("v_cshift ", cmd, "\n"));
-	self.nextthink = time + .1;
-	
-}
+};
 
 void ExplodeFlashGrenade() =
 {
@@ -388,23 +436,32 @@ void ExplodeFlashGrenade() =
 	WriteCoord(MSG_MULTICAST, self.origin_y);
 	WriteCoord(MSG_MULTICAST, self.origin_z);
 	multicast(self.origin, MULTICAST_PHS);
-	
-	local entity te = findradius(self.origin, 300);
+	local float enemyhit = 0;
+	local float rad = 300;
+	local entity te = findradius(self.origin, rad);
 	while (te) 
 	{
 		if (te.classname == "player" && te.deadflag == DEAD_NO) 
 		{
-			if(te.team_no != self.team_no || te == self.owner)
+			if(te.team_no != self.owner.team_no && te.deadflag == DEAD_NO)
 			{
 				traceline(self.origin, te.origin, 1, self);
-				if (trace_fraction == 1) 
-				{
+				if (trace_fraction == 1) {
+					
+					local vector org = te.origin + (te.mins + te.maxs) * 0.5;
+					local float frac = (rad - vlen(self.origin - org)) / rad;
+					
+					
 					sprint(te, PRINT_HIGH, "you have been flashed!\n");
-					te.deathtype = "grenade_flash";
-					T_Damage (te, self, self.owner, 20);
+					
 					stuffcmd(te, "play beta1/grenade_flash.wav\n");
-					//local float dist = 
-					local float flashdur = 3;
+					stuffcmd(te, "bf\n");
+					te.deathtype = "grenade_flash";
+					enemyhit = 1;
+					
+					T_Damage (te, self, self.owner, 20);
+					
+	
 					
 					local entity ft;
 					local float found = 0;
@@ -414,139 +471,67 @@ void ExplodeFlashGrenade() =
 						if (te != world && ft.owner == te ) 
 						{
 							found = found + 1;
-							ft.bubble_count = time + flashdur;
+							//ft.bubble_count = time + ftime;
 							ft.nextthink = time + .1;
+							
 						}
-						te = find(te, classname, "mcpflashtimer");
+						ft = find(ft, classname, "mcpflashtimer");
 					}
 					if(found == 0)
 					{
+						
 						newmis = spawn();
 						newmis.classname = "mcpflashtimer";
 
 						newmis.owner = te;
 						newmis.think = mcpflash_think;
-						newmis.nextthink = time + .1;
-						newmis.bubble_count = time + flashdur;
-						te.dimension_see = 0;
+						newmis.nextthink = time;
+						//newmis.bubble_count = time + ftime;
+						
 					}
-
+					
+					//float flashamount = CalcFlash(te);
+					local float ftime = FLASH_DURATION;
+					ftime = ftime * (frac + frac * 0.5);
+					te.FlashTime = ftime;
+					local float flashamount = CalcFlash(te);
+					StuffFlash(te, flashamount);
+					te.dimension_see = 0;
 				}
 			}
 			
 		}
 		te = te.chain;
 	}
+	if(enemyhit)
+		AddStat(self.owner, STAT_GRENHIT, ROLE_ASSASSIN);
 	remove(self);
 };
 
-/*void () ExplodeFlashGrenadeOld = {
-
-    self.effects = self.effects | EF_BRIGHTLIGHT;
-    WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
-    WriteByte(MSG_MULTICAST, TE_TAREXPLOSION);
-    WriteCoord(MSG_MULTICAST, self.origin_x);
-    WriteCoord(MSG_MULTICAST, self.origin_y);
-    WriteCoord(MSG_MULTICAST, self.origin_z);
-    multicast(self.origin, MULTICAST_PHS);
-    ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
-
-vector org;
-    float dam, frac;
-    entity te;
-    float rad = 300;
-    te = findradius(self.origin, rad);
-    while (te) {
-        if (te.classname == "player") {
-            traceline(self.origin, te.origin, 1, self);
-            if (trace_fraction == 1) {
-      
-                sprint(te, PRINT_HIGH, "you have been flashed!\n");
-                org = te.origin + (te.mins + te.maxs) * 0.5;
-                frac = (rad - vlen(self.origin - org)) / rad;
-                dam = 10 * frac;
-                //deathmsg = DMSG_GREN_FLASH;
-                if (dam < 1)
-                {
-                    dam = 1;
-                }
-                //TF_T_Damage(te, self, self.owner, dam, 2, 16 | 4);
-
-			te.deathtype = "grenade_flash";
-                //T_Damage(te,self,self.owner,dam);
-
-		T_Damage (te, self, self.owner, 20);
-		
-                stuffcmd(te, "play beta1/grenade_flash.wav\n");
-                
-                if (te.health > 0) {
-                    entity ft;
-                    ft = find(world, classname, "flashtimer");
-                    float found;
-                    found = FALSE;
-                    
-                    while (ft)
-                    {
-                        if (ft.owner == te)
-                        {
-                            found = TRUE;
-                            ft.nextthink = time + .1;
-                        }
-                        ft = find(ft, classname, "flashtimer");
-                    }
-
-                    if (!found)
-                    {
-                        newmis = spawn();
-                        newmis.classname = "timer";
-                        newmis.netname = "flashtimer";
-                        newmis.team_no = self.owner.team_no;
-                        newmis.owner = te;
-                        newmis.think = FO_FlashTimer;
-                        newmis.nextthink = time + .1;
-                    }
-                    float ftime = FLASH_DURATION;
-                    ftime = ftime * (frac + frac * 0.5); // fall off is awful, let's half it
-                    te.FlashTime = ftime;
-
-                    float flashamount = FO_CalcFlash(te);
-
-                    StuffFlash(te, flashamount);
-
-                    SetFlashDimension(te);
-                }
-            }
-        }
-        te = te.chain;
-    }
-
-    remove(self);
-};*/
 
 void () StickyGrenade = {
-    local entity te;
+    local entity newmis2;	//was te?
 
-    
     //KickPlayer(-2, self.owner);
-	newmis = spawn();
-	newmis.movetype = MOVETYPE_BOUNCE;
-	newmis.solid = SOLID_BBOX;
-	newmis.owner = self.owner;
-	newmis.velocity = '0 0 0';
-	newmis.angles = vectoangles(newmis.velocity);
-	newmis.think = SUB_Null;
-	newmis.nextthink = time + 0.1;
+	newmis2 = spawn();
+	newmis2.movetype = MOVETYPE_BOUNCE;
+	newmis2.solid = SOLID_BBOX;
+	newmis2.owner = self.owner;
+	newmis2.velocity = '0 0 0';
+	newmis2.angles = vectoangles(newmis.velocity);
+	newmis2.think = SUB_Null;
+	newmis2.nextthink = time + 0.1;
 
 	if(self.role == ROLE_RECON)
 	{
 		bprint(PRINT_MEDIUM, strcat("No ", self.owner.netname,", swallowing the grenade isn't very effective!\n"));
-		newmis.think = ExplodeShatterGrenade;
+		newmis2.think = ExplodeShatterGrenade;
 	}
 	
 	if(self.role == ROLE_ASSASSIN)
 	{
 		bprint(PRINT_MEDIUM, strcat("Well ", self.owner.netname,", don't quit your day job!\n"));
-		newmis.think = ExplodeFlashGrenade;
+		newmis2.think = ExplodeFlashGrenade;
 	}
 	
 	if(self.role == ROLE_FIGHTER)
@@ -554,8 +539,8 @@ void () StickyGrenade = {
 		bprint(PRINT_MEDIUM, strcat("Ummm, ", self.owner.netname,", you're supposed to THROW the grenade!\n"));	
 	
 
-		newmis.think = ExplodeFragGrenade;
-		newmis.avelocity = '300 300 300';
+		newmis2.think = ExplodeFragGrenade;
+		newmis2.avelocity = '300 300 300';
 
 	}
 	if(self.role == ROLE_BOMBER)
@@ -566,21 +551,21 @@ void () StickyGrenade = {
 		//newmis.avelocity = '0 300 0';
 		//FO_SetModel(newmis, "progs/beta1/mcp_gren_beartrap_shut.mdl");
 		
-		bprint(PRINT_MEDIUM, strcat("Ummm, ", self.owner.netname,", you're supposed to THROW the grenade!\n"));	
-		newmis.think = ExplodeFragGrenade;
-		newmis.avelocity = '300 300 300';
+		bprint(PRINT_MEDIUM, strcat("Ummm, ", self.owner.netname,", it's best if you mark the enemy!\n"));	
+		newmis2.think = ExplodeMarkerGrenade;
+		newmis2.avelocity = '300 300 300';
 		
 		if(self.owner.team_no == TEAM_BLUE)
-		newmis.skin = 1;
+		newmis2.skin = 1;
 		else
-		newmis.skin = 2;
+		newmis2.skin = 2;
 	}
 	
 	if(self.role == ROLE_SUPPORT)
 	{
 		bprint(PRINT_MEDIUM, strcat("Yes ", self.owner.netname,", eating leeches is bad!\n"));
-		newmis.think = ExplodeLeechGrenade;
-		newmis.avelocity = '300 300 300';
+		newmis2.think = ExplodeLeechGrenade;
+		newmis2.avelocity = '300 300 300';
 		
 	}
 	if(self.role == ROLE_MGUNNER)
@@ -588,13 +573,13 @@ void () StickyGrenade = {
 		bprint(PRINT_MEDIUM, strcat("It seems, ", self.owner.netname,", needs to learn how to count!\n"));	
 	
 
-		newmis.think = ExplodePushupGrenade;
-		newmis.avelocity = '0 0 300';
+		newmis2.think = ExplodePushupGrenade;
+		newmis2.avelocity = '0 0 300';
 
 	}
     
-	setsize(newmis, '0 0 0', '0 0 0');
-	setorigin(newmis, self.owner.origin);
+	setsize(newmis2, '0 0 0', '0 0 0');
+	setorigin(newmis2, self.owner.origin);
    
 	remove(self);
 };
@@ -637,7 +622,7 @@ void ExplodeShatterGrenade() =
 {
 	T_RadiusBounce(self, self.owner, 240, world);
 	
-
+	local float hitenemy = 0;
 	local   float   points;
 	local   entity  head;
 	local   vector  org;
@@ -648,8 +633,10 @@ void ExplodeShatterGrenade() =
 	{
 		if (head.classname == "player" && head.team_no != self.owner.team_no && head.deadflag == DEAD_NO)
 		{
+			hitenemy = 1;
 			if (head.takedamage)
 			{
+				
 				org = head.origin + (head.mins + head.maxs)*0.5;
 				points = 0.5*vlen (self.origin - org);
 				if (points < 0)
@@ -663,6 +650,10 @@ void ExplodeShatterGrenade() =
 		}
 		head = head.chain;
 	}
+	if(hitenemy)
+	{
+		AddStat(self.owner, STAT_GRENHIT, ROLE_RECON);
+	}
 
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte(MSG_MULTICAST, TE_EXPLOSION);
@@ -674,7 +665,94 @@ void ExplodeShatterGrenade() =
 	remove(self);
 };
 
-void DisarmLittleProxy() =
+
+
+void PlayGrenTimerSound () = {
+	
+	local string grentimer = infokey(self.owner, "grentimer");
+	if(grentimer == "0")
+		return;
+	if(grentimer == "off")
+		return;
+	if(grentimer == "")
+		grentimer = "1";
+	stuffcmd(self.owner, strcat("play beta1/mcp_grentimer",grentimer,"\n"));
+	remove(self);
+};
+
+
+void PrimeGrenade() = {
+
+	self.impulse = 0;
+	//if (self.ispriming == 1)
+	//	return;
+	if(self.gren != world)
+		return;
+	if(self.team_no == TEAM_NONE)
+		return;
+	if(self.role == ROLE_NONE)
+		return;
+		
+	if(self.grencount <= 0)
+	{
+		stuffcmd(self, "play beta1/error.wav\n");
+		sprint(self, PRINT_HIGH, "no grenades left.\n");
+		return;
+	}
+	
+	
+	//local entity grentimer = spawn();
+	AddStat(self, STAT_GRENPRIMED, self.role);
+	self.gren = spawn();
+        self.gren.nextthink = time;
+        self.gren.think = PrimeGrenade_Think;
+	self.gren.owner = self;
+	self.gren.role = self.role;
+	self.gren.classname = "grentimer";
+	self.gren.bubble_count = time + 3.8;
+
+	
+	self.grencount = self.grencount - 1;
+	self.ammo_nails = self.ammo_nails - 1;
+	
+	local float offset = stof(infokey(self,"grentimerdelay"));
+	
+	
+	local entity grentimersound = spawn();
+	grentimersound.owner = self;
+	grentimersound.think = PlayGrenTimerSound;
+	grentimersound.nextthink = time + offset;
+	
+	if(self.role == ROLE_RECON)
+	{
+		sprint(self, PRINT_HIGH, "priming shatter grenade...\n");	
+	}
+	if(self.role == ROLE_ASSASSIN)
+	{
+		sprint(self, PRINT_HIGH, "priming flash grenade...\n");		
+	}
+	if(self.role == ROLE_FIGHTER)
+	{	
+		sprint(self, PRINT_HIGH, "priming frag grenade...\n");		
+	}
+	if(self.role == ROLE_BOMBER)
+	{
+		//sprint(self, PRINT_HIGH, "priming beartrap grenade...\n");	
+		sprint(self, PRINT_HIGH, "priming marker grenade...\n");		
+	}
+	if(self.role == ROLE_SUPPORT)
+	{
+		sprint(self, PRINT_HIGH, "priming leech grenade...\n");		
+	}
+	if(self.role == ROLE_MGUNNER)
+	{
+		sprint(self, PRINT_HIGH, "priming pushup grenade...\n");		
+	}
+
+};
+
+
+/*void DisarmLittleProxy() =
 {	
 	T_RadiusDamage(self, self.owner, 10, world,"grenade_littleproxy");
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
@@ -685,12 +763,13 @@ void DisarmLittleProxy() =
 
 	multicast(self.origin, MULTICAST_PHS);
 	remove(self);
-};
+};*/
 
+/*
 void ExplodeLittleProxy() =
 {	
 	T_RadiusDamage(self, self.owner, 150, world,"grenade_littleproxy");
-	ZutRadiusCheck (self.origin, 32, self, self.owner.team_no);
+
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte(MSG_MULTICAST, TE_EXPLOSION);
 	WriteCoord(MSG_MULTICAST, self.origin_x);
@@ -700,7 +779,10 @@ void ExplodeLittleProxy() =
 	multicast(self.origin, MULTICAST_PHS);
 	remove(self);
 };
+*/
 
+
+/*
 void LittleProxy_Touch() = 
 {
 	if(other.classname != "player")
@@ -714,9 +796,9 @@ void LittleProxy_Touch() =
 	self.touch = SUB_Null;
 	
 };
+*/
 
-
-
+/*
 void LittleProxy_Think() = {
     self.nextthink = time + 0.2;
     if (self.velocity == '0 0 0') {
@@ -753,7 +835,8 @@ void LittleProxy_Think() = {
     }
     self.velocity = self.velocity * -1;
 };
-
+*/
+/*
 void CheckBearTrapLimit() = 
 {
 	local entity oldest = world;
@@ -782,14 +865,16 @@ void CheckBearTrapLimit() =
 		oldest.nextthink = time;
 	}
 };
-
+*/
+/*
 void BearTrapShut_Touch() = {
 	if(other.classname == "player")
 		return;
 		
 	FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
 };
-
+*/
+/*
 void BearTrapOpen_Touch() = {
 	if(other.classname != "player")
 		return;
@@ -807,9 +892,8 @@ void BearTrapOpen_Touch() = {
 	other.deathtype = "beartrap";
 	T_Damage(other, self, self.owner, 300);
 };
-
-
-
+*/
+/*
 void BearTrap_Think() = {
     self.nextthink = time + 0.05;
 
@@ -850,23 +934,24 @@ void BearTrap_Think() = {
             return;
         }
     }
-/*
-    traceline(self.movedir, self.origin, 1, self);
-    if (trace_fraction == 1) {
-        self.movedir = self.origin;
-        return;
-    }
-    self.velocity = self.velocity * -1;
-    */
-};
 
+    //traceline(self.movedir, self.origin, 1, self);
+    //if (trace_fraction == 1) {
+     //   self.movedir = self.origin;
+    //    return;
+   // }
+   // self.velocity = self.velocity * -1;
+   
+};*/
+
+/*
 void ExplodeBearTrap()=
 {
 	self.nextthink = time + 0.05;
 	self.think = BearTrap_Think;
 };
-
-
+*/
+/*
 void ExplodeBigProxy() = 
 {
 	local entity te = find(world, classname, "littleproxy");
@@ -882,7 +967,7 @@ void ExplodeBigProxy() =
 	}
 	
 	T_RadiusDamage(self, self.owner, 64, world,"grenade_bigproxy");
-	ZutRadiusCheck (self.origin, 64, self, self.owner.team_no);
+
 	WriteByte(MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte(MSG_MULTICAST, TE_EXPLOSION);
 	WriteCoord(MSG_MULTICAST, self.origin_x);
@@ -927,87 +1012,4 @@ void ExplodeBigProxy() =
 	
 	remove(self);
 };
-
-void PlayGrenTimerSound () = {
-	
-	local string grentimer = infokey(self.owner, "grentimer");
-	if(grentimer == "0")
-		return;
-	if(grentimer == "off")
-		return;
-	if(grentimer == "")
-		grentimer = "1";
-	stuffcmd(self.owner, strcat("play beta1/mcp_grentimer",grentimer,"\n"));
-	remove(self);
-};
-
-
-void PrimeGrenade() = {
-
-	self.impulse = 0;
-	//if (self.ispriming == 1)
-	//	return;
-	if(self.gren != world)
-		return;
-	if(self.team_no == TEAM_NONE)
-		return;
-	if(self.role == ROLE_NONE)
-		return;
-		
-	if(self.grencount <= 0)
-	{
-		stuffcmd(self, "play beta1/error.wav\n");
-		sprint(self, PRINT_HIGH, "no grenades left.\n");
-		return;
-	}
-	
-	
-	//local entity grentimer = spawn();
-	self.gren = spawn();
-        self.gren.nextthink = time;
-        self.gren.think = PrimeGrenade_Think;
-	self.gren.owner = self;
-	self.gren.role = self.role;
-	self.gren.classname = "grentimer";
-	self.gren.bubble_count = time + 3.8;
-
-	
-	self.grencount = self.grencount - 1;
-	self.ammo_nails = self.ammo_nails - 1;
-	
-	local float offset = stof(infokey(self,"grentimerdelay"));
-	
-	
-	local entity grentimersound = spawn();
-	grentimersound.owner = self;
-	grentimersound.think = PlayGrenTimerSound;
-	grentimersound.nextthink = time + offset;
-	
-	if(self.role == ROLE_RECON)
-	{
-		sprint(self, PRINT_HIGH, "priming shatter grenade...\n");	
-	}
-	if(self.role == ROLE_ASSASSIN)
-	{
-		sprint(self, PRINT_HIGH, "priming flash grenade...\n");		
-	}
-	if(self.role == ROLE_FIGHTER)
-	{	
-		sprint(self, PRINT_HIGH, "priming frag grenade...\n");		
-	}
-	if(self.role == ROLE_BOMBER)
-	{
-		//sprint(self, PRINT_HIGH, "priming beartrap grenade...\n");	
-		sprint(self, PRINT_HIGH, "priming frag grenade...\n");		
-	}
-	if(self.role == ROLE_SUPPORT)
-	{
-		sprint(self, PRINT_HIGH, "priming leech grenade...\n");		
-	}
-	if(self.role == ROLE_MGUNNER)
-	{
-		sprint(self, PRINT_HIGH, "priming pushup grenade...\n");		
-	}
-
-};
-
+*/

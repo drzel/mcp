@@ -271,13 +271,18 @@ void SoundTeam (float team, entity exclude, string file) =
 void ResetVisDimensions(entity e) =
 {
 	e.dimension_see = DIM_WORLD;
-
+	
+	if(mcpflag.owner != e)
+		e.dimension_see = e.dimension_see | DIM_FLAG;
+	
 	if(e.team_no == TEAM_BLUE)
 		e.dimension_see = e.dimension_see | DIM_BLUETEAM;
 	if(e.team_no == TEAM_RED)
 		e.dimension_see = e.dimension_see | DIM_REDTEAM;
 	if(e.pdim != 0)
 		e.dimension_see = e.dimension_see | e.pdim;
+	
+		
 	
 };
 
@@ -396,25 +401,61 @@ void pingvisual_think() =
 	{
 
 		FO_SetModel(self,"progs/beta1/mcp_pingt1.spr", self.owner.pdim);
-		if(self.owner.team_no == TEAM_BLUE)
-			self.frame = 9;
-		else
-			self.frame = 9;
+
 	}
 		
-	traceline(self.owner.origin, self.gren.origin, 0, self);
+	traceline(self.owner.origin, self.gren.origin, 1, self);
 	local float len = vlen(trace_endpos - self.owner.origin);
 	
 	local vector dir = normalize(trace_endpos - self.owner.origin);
-	local float dist1 = vlen(trace_endpos - self.owner.origin);
+	local float dist1 = vlen(trace_endpos - self.gren.origin);
 	local float dist2 = vlen(self.gren.origin - self.owner.origin);
-	//local float dist3 = dist1/dist2;
+	//local float dist3 = vlen(t
+	//local float dist3 = (disttoendpos/disttopoint);
 	
-	//bprint(2, strcat(ftos(dist2),"trfrac\n"));
+	local float playertoping = vlen(self.gren.origin - self.owner.origin);
+	local float tracetoping = vlen(self.gren.origin - trace_endpos);
+	local float playertotrace = vlen(trace_endpos - self.owner.origin);
+	
+	local float playertopingperc = playertoping;
+	if(playertopingperc >= 1500)
+		playertopingperc = 1500;
+	playertopingperc = 1 - (playertopingperc/1500);
+	//bprint(2, strcat(ftos(playertopingperc),"trfrac\n"));
+	
+	if(trace_fraction != 1)
+	{
+
+		if(playertopingperc <= 0.1)
+			self.frame = 0;
+		else if (playertopingperc <= 0.2)
+			self.frame = 1;
+		else if (playertopingperc <= 0.3)
+			self.frame = 2;
+		else if (playertopingperc <= 0.4)
+			self.frame = 3;
+		else if (playertopingperc <= 0.5)
+			self.frame = 4;
+		else if (playertopingperc <= 0.6)
+			self.frame = 5;
+		else if (playertopingperc <= 0.7)
+			self.frame = 6;
+		else if (playertopingperc <= 0.8)
+			self.frame = 7;
+		else if (playertopingperc <= 0.9)
+			self.frame = 8;
+		else 
+			self.frame = 9;
+	}
+	else
+		self.frame = 9;
+		
+	
 	local vector pos = self.owner.origin + (dir * (len * 0.9));	//doing this to pull sprite back a little bit
 	
 	pos = pos + '0 0 32';
 	setorigin(self,pos);
+	
 	self.nextthink = time + 0.1;
 	
 	
@@ -428,9 +469,11 @@ void CreatePingPoint() =
 		
 	self.nextpingpoint = time + 0.5;
 	makevectors (self.v_angle);
-	local vector org = self.origin + '0 0 16';
-	traceline(org, org + v_forward * 3000, 0, self);
-
+	//local vector org = self.origin + '0 0 16';
+	local vector org = self.origin;
+	traceline(org, org + v_forward * 3000, 1, self);
+	//traceline
+	
 	local entity h = spawn();
 	h.classname = "pingpoint";
 	h.owner = self;
@@ -459,3 +502,120 @@ void CreatePingPoint() =
 		te = find(te,classname,"player");
 	}
 };
+
+vector ZutSubtract(vector a, vector b)
+{
+    	local vector res;
+    	res_x = a_x-b_x;
+    	res_y = a_y-b_y;
+    	res_z = a_z-b_z;
+        //return (a.x-b.x, a.y-b.y, a.z-b.z);
+        return res;
+};
+    
+vector ZutScale(float f, vector a)
+    {
+    	local vector res;
+    	res_x = f * a_x;
+    	res_y = f * a_y;
+    	res_z = f * a_z;
+    	return res;
+        //return (f*a.x, f*a.y, f*a.z);
+    };
+
+float ZutDot(vector a, vector b)
+    {
+        return (a.x*b.x)+(a.y*b.y)+(a.z*b.z);
+    };
+
+vector ZutProjection(vector a, vector b)
+    {
+        return ZutScale(ZutDot(a, b)/ZutDot(b, b), b);
+    };
+    
+vector ZutRejection(vector a, vector b)
+    {
+        return ZutSubtract(a, ZutProjection(a, b));
+    };
+    
+vector ZutReflection(vector v, vector n)
+{
+    	local vector res = -2 * ZutDot(v,n) * n + v;
+    	return res;
+};
+   
+ 
+void UpdateAwardShowString(float step)
+{
+	
+	local entity entres;
+	local entity entsearch;
+	local string awardname;
+	local string awardto;
+	local string amount;
+	local string personalamount;
+	local string personalresult;
+	local string result;
+	
+	if(step == 0)
+		self.awardshowstring = "awards:\n";
+	
+	if(step == 1)
+	{
+		
+		entsearch = find(world, classname, "player");
+		while (entsearch) 
+		{
+			if (entsearch.classname == "player") 
+			{
+				if(entres == world)
+					entres = entsearch;
+				else
+					if(entsearch.playerstats.kills > entres.playerstats.kills)
+						entres = entsearch;
+				
+			}
+			entsearch = find(entsearch, classname, "player");
+		}
+		
+		awardname = "most kills :";
+		awardto = substring(entres.netname,0,10);
+		amount = ftos(entres.playerstats.kills);
+		personalamount = ftos(self.playerstats.kills);
+		personalresult = strcat("you got (",personalamount,")");
+		
+		result = strcat(awardname, awardto, amount, personalresult);
+		
+		self.awardshowstring = strcat(self.awardshowstring, result,"\n");
+		
+	}
+	if(step == 2)
+	{
+		
+		entsearch = find(world, classname, "player");
+		while (entsearch) 
+		{
+			if (entsearch.classname == "player") 
+			{
+				if(entres == world)
+					entres = entsearch;
+				else
+					if(entsearch.playerstats.deaths > entres.playerstats.deaths)
+						entres = entsearch;
+				
+			}
+			entsearch = find(entsearch, classname, "player");
+		}
+		
+		awardname = "most deaths :";
+		awardto = substring(entres.netname,0,10);
+		amount = strpad(-3,(ftos(entres.playerstats.deaths)));
+		personalamount = ftos(self.playerstats.deaths);
+		personalresult = strcat("you got (",personalamount,")");
+		
+		result = strcat(awardname, awardto, amount, personalresult);
+		
+		self.awardshowstring = strcat(self.awardshowstring, result,"\n");
+	}
+};
+

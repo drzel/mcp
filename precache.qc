@@ -280,7 +280,7 @@ void zPreCache() =
 
 	//misc
 	
-	precache_model ("progs/beta1/mcp_player2.mdl");
+	precache_model (FPATH_PLAYERMDL);
 
 	precache_model("progs/beta1/mcp_flag.mdl");
 	precache_model("progs/beta1/mcp_armourshard.mdl");
@@ -355,6 +355,7 @@ void zPreCache() =
 	precache_sound("beta1/thomas.wav");
 	precache_sound("beta1/insideout.wav");
 	precache_sound("beta1/alert.wav");
+	precache_sound("beta1/markplayer.wav");
 	
 	precache_sound("beta1/voice_enemyhasflag.wav");
 	precache_sound("beta1/voice_teamhasflag.wav");
@@ -373,6 +374,11 @@ void zPreCache() =
 	precache_sound("beta1/voice_monsterkill.wav");
 	precache_sound("beta1/voice_godlike.wav");
 	precache_sound("beta1/voice_holyshit.wav");
+	precache_sound("beta1/voice_impressive.wav");
+	precache_sound("beta1/voice_accuracy.wav");
+	precache_sound("beta1/voice_midair1.wav");
+	precache_sound("beta1/voice_midair2.wav");
+	precache_sound("beta1/voice_midair3.wav");
 	
 	precache_sound("beta1/humiliation.wav");
 	precache_sound("beta1/toasty.wav");

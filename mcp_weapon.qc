@@ -112,26 +112,76 @@ void ClusterBigTouch() =
         return;
     }
     FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
-    ClusterBigSplit();
+     ClusterBigSplit();
+    remove(self);
+
+   
     
 
 };
 
-void ClusterMiniTouch() =
+entity GetMarker() =
 {
-	if (other == self.owner)
-	{
-		return;
-	}
-	if (other.takedamage == DAMAGE_AIM) {
-		ClusterMiniDirectExplode();
-		return;
-    }
-    FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
-  
-};
 
-void StickyTouch() = 
+	local entity head = findradius(self.origin, 500);
+	local entity targ = world;
+	while (head)
+	{
+		if (head.takedamage && head.classname == "player")
+		{
+			local entity te2 = find(world, classname, "marker");
+			while (te2) 
+			{
+				if (te2 != world && te2.owner == head && te2.gren == self.owner) 
+				{
+					if(targ == world)
+						targ = head;
+					else if (vlen(head.origin - self.origin) > vlen(targ.origin - self.origin))
+						targ = head;
+						
+				}
+				te2 = find(te2, classname, "marker");
+			}
+
+		}
+		head = head.chain;
+	}
+	return targ;
+	//return self.owner;
+	
+	
+	//if(targ == world)
+		//return;
+	//bprint(2,strcat(targ.netname,"markerchecker\n"));
+	//local vector dir = normalize(targ.origin - self.origin);
+	//self.solid = SOLID_NOT;
+	//setorigin(self, self.origin+'0 0 8');
+	//self.movetype = MOVETYPE_FLY;
+	//self.velocity = dir;
+	//self.velocity = dir * 500;
+	//self.angles = vectoangles(self.velocity);
+	//self.velocity_z = 64;
+	
+	//local vector dir2 = normalize((self.owner.origin + (normalize(self.owner.velocity) * 150)) - self.origin);	//aiming just ahead
+	//local entity mis = spawn();
+	
+	//FO_SetModel(mis, "progs/beta1/mcp_pinesmall.mdl", DIM_WORLD);
+	//mis.skin = self.skin;
+	//setsize (mis, '0 0 0', '0 0 0'); 
+	//setorigin(mis,self.origin + '0 0 8');
+	//mis.movetype = MOVETYPE_BOUNCE;
+	//mis.velocity = dir2 * 300;
+	//if(self.owner.origin_z > self.origin_z)
+	//	mis.velocity_z = mis.velocity_z + 128;
+	//else
+	//	mis.velocity_z = mis.velocity_z + 64;
+	
+	//remove(self);
+}
+
+
+
+/*void StickyTouch() = 
 {
 	if (other == self.owner)
 		return;
@@ -161,7 +211,7 @@ void StickyTouch() =
 		FO_Sound(self, CHAN_WEAPON, "beta1/sticky.wav", 1, ATTN_NORM);
 	}
 };
-
+*/
 
 string GetWeaponModel() =
 {
@@ -522,6 +572,7 @@ void MCP_Attack(float wpn) =
 		makevectors (self.v_angle);
 		source = self.origin + '0 0 16';
 		traceline (source, source + v_forward*64, FALSE, self); // false
+		AddStat(self, STAT_WEAPONFIRED, WPN_AXE);
 
 		
 		if (trace_fraction == 1.0)
@@ -534,7 +585,9 @@ void MCP_Attack(float wpn) =
 		
 		if (trace_ent.takedamage)
 		{
-
+			if(trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
+				AddStat(self, STAT_WEAPONHIT, WPN_AXE);
+			
 			trace_ent.axhitme = 1;
 			SpawnBlood (org, 20);
 			if(self.role == ROLE_ASSASSIN)
@@ -571,6 +624,7 @@ void MCP_Attack(float wpn) =
 		WriteByte (MSG_ONE, SVC_SMALLKICK);
 
 		dir = aim (self, 100000);
+		AddStat(self, STAT_WEAPONFIRED, WPN_SHOTGUN);
 		FireBullets (6, dir, '0.04 0.04 0');
 		
 		if(self.clip_curr_tertiary == 0)
@@ -618,7 +672,7 @@ void MCP_Attack(float wpn) =
 	
 		dir2 = aim (self, 100000);
 		
-		
+		AddStat(self, STAT_WEAPONFIRED, WPN_SUPERSHOTGUN);
 		FireBullets (14, dir2, '0.14 0.08 0');
 		if(self.role == ROLE_RECON)
 		{
@@ -714,14 +768,16 @@ void MCP_Attack(float wpn) =
 		
 		makevectors (self.v_angle);
 		source = self.origin + '0 0 16';
+		AddStat(self, STAT_WEAPONFIRED, WPN_RAILGUN);
 		traceline (source, source + v_forward*5000, FALSE, self);
 		if (trace_fraction == 1.0)
 			return;
 	
 		org = trace_endpos - v_forward*4;
-		ZutRadiusCheck (trace_endpos, 32, self, self.team_no);
 		if (trace_ent.takedamage)
 		{
+
+				
 			local float maxdamage = 60;
 			local float mindamage = 20;
 			local float mindistance = 300;
@@ -744,6 +800,7 @@ void MCP_Attack(float wpn) =
 			if(trace_ent.classname == "player" && trace_ent.team_no != self.team_no)
 			{
 				self.heat = self.heat + 1;
+				AddStat(self, STAT_WEAPONHIT, self.heat);
 				if(self.heat > 3)
 					self.heat = 3;
 				dmg = dmg * self.heat;
@@ -751,9 +808,16 @@ void MCP_Attack(float wpn) =
 				if(self.heat == 1)
 					multiplier = " damage.\n";
 				if(self.heat == 2)
+				{	
+					stuffcmd(self, "play beta1/voice_impressive.wav\n");
 					multiplier = " damage (doubled).\n";
+				}
 				if(self.heat == 3)
+				{
+					SoundTeam (TEAM_BLUE, world, "beta1/voice_accuracy.wav");
+					SoundTeam (TEAM_RED, world, "beta1/voice_accuracy.wav");
 					multiplier = " damage (tripled).\n";
+				}
 				
 				sprint(self, PRINT_HIGH, strcat("you rail ",trace_ent.netname, " for ", ftos(dmg), multiplier));
 				
@@ -881,10 +945,13 @@ void() superspike_touch =
 		return;
 	}
 	
-	ZutRadiusCheck (self.origin, 32, self, self.owner.team_no);
+
 // hit something that bleeds
 	if (other.takedamage)
 	{
+		if(other.classname == "player" && other.team_no != self.owner.team_no)
+			AddStat(self.owner, STAT_WEAPONHIT, WPN_NAILGUN);
+			
 		spawn_touchblood (18);
 		other.deathtype = "supernail";
 		T_Damage (other, self, self.owner, 12);
@@ -913,7 +980,7 @@ void SpawnNail()=
 {
 	local vector    dir;
 	//local entity    old;
-	
+	AddStat(self, STAT_WEAPONFIRED, WPN_NAILGUN);
 	FO_Sound(self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
 	self.attack_finished = time + 0.2;
 	dir = aim (self, 1000);
@@ -933,6 +1000,7 @@ void SpawnNail()=
 
 void SpawnMissile()=
 {
+		AddStat(self, STAT_WEAPONFIRED, WPN_ROCKETLAUNCHER);
 		newmis = spawn ();
 		newmis.owner = self;
 		newmis.movetype = MOVETYPE_FLYMISSILE;
@@ -963,9 +1031,56 @@ void SpawnMissile()=
 };
 
 
-void SpawnMiniCluster(float x)
+void ClusterMiniTouch() =
 {
-	local vector dir = normalize(self.velocity);
+	
+	if (other == self.owner)
+	{
+		return;
+	}
+	if (other.takedamage == DAMAGE_AIM) {
+		ClusterMiniDirectExplode();
+		return;
+	}
+	FO_Sound(self, CHAN_WEAPON, "weapons/bounce.wav", 1, ATTN_NORM);
+	
+	//bprint(2,strcat(ftos(self.bubble_count), "bubba\n"));
+
+/*	if(other.classname == "worldspawn" && time > self.bubble_count)
+	{
+
+		
+		self.bubble_count = time + 0.05;
+		//local entity targ = GetMarker();
+		////if(targ != world)
+		//{
+			self.velocity_x = self.velocity_x * 0.5;
+			self.velocity_y = self.velocity_y * 0.5;
+			SpawnMiniCluster(0);
+			remove(self);
+		//}
+		
+		
+	}
+	*/
+    
+  
+};
+
+void SpawnMiniCluster(float x, entity stattrack) =
+{
+	local entity targ = GetMarker();
+	local vector dir;
+	if(targ == world)
+	{
+		dir = normalize(self.velocity);	
+	}
+	else
+	{
+		//dir = normalize(targ.origin - self.origin);
+		dir = normalize(((targ.origin + '0 0 64') + (normalize(targ.velocity) * 100)) - self.origin);
+	}
+	
 	local float speed = vlen(self.velocity);
 	
 	local entity newmis1 = spawn ();
@@ -974,40 +1089,52 @@ void SpawnMiniCluster(float x)
 	newmis1.movetype = MOVETYPE_BOUNCE;
 	newmis1.solid = SOLID_TRIGGER;
 	newmis1.classname = "clustermini";
-	local vector dir2 = vectoangles(dir);
-	dir2_y = dir2_y + x * 6;
-	makevectors (dir2);
-	
-	local vector vec = normalize (v_forward);
-	vec_z = 0 - vec_z + (random() - 0.5) * 0.1;
-	
-	newmis1.velocity = vec * speed;
-	
 	FO_SetModel(newmis1, "progs/beta1/mcp_pinesmall.mdl", DIM_WORLD);
 	if(self.owner.team_no == TEAM_BLUE)
 		newmis1.skin = 1;
 	if(self.owner.team_no == TEAM_RED)
 		newmis1.skin = 2;
-	setsize (newmis1, '0 0 0', '0 0 0'); 
-	//setsize (newmis1, '-4 -4 -4', '4 4 4');              
+	setsize (newmis1, '0 0 0', '0 0 0');              
 	setorigin (newmis1, self.origin);
-	
 	newmis1.touch = ClusterMiniTouch;
 	newmis1.think = ClusterMiniExplode;
-	newmis1.nextthink = time + 1.5;
+	newmis1.nextthink = self.cnt;
+	newmis1.cnt = self.cnt;
+	newmis1.bubble_count = time + 0.1;
+	newmis1.gren = stattrack;
+	local vector dir2 = vectoangles(dir);
+	dir2_y = dir2_y + x * 6;
+
+	makevectors (dir2);
+	
+	local vector vec = normalize (v_forward);
+	vec_z = 0 - vec_z + (random() - 0.5) * 0.1;
+	//vec_z = vec_z + 32;
+	
+	
+	newmis1.velocity = vec * speed;
+
 };
 
 void ClusterBigSplit() =
 {
-	SpawnMiniCluster(-1);
-	SpawnMiniCluster(0);
-	SpawnMiniCluster(1);
+	local entity te = spawn();
+	te.classname = "clusterstat";
+	te.think = SUB_Remove;
+	te.nextthink = time + 5;
+	
+	self.cnt = time + 1.5;
+	self.bubble_count = 0;
+	SpawnMiniCluster(-1,te);
+	SpawnMiniCluster(0,te);
+	SpawnMiniCluster(1,te);
+	
 	remove(self);
 };
 
 
 
-void SpawnSticky()=
+/*void SpawnSticky()=
 {
 	
 		newmis = spawn ();
@@ -1046,11 +1173,11 @@ void SpawnSticky()=
 			newmis.skin = 2;
 		setsize (newmis, '0 0 0', '0 0 0');             
 		setorigin (newmis, self.origin);
-};
+};*/
 
 void SpawnClusterGren()=
 {
-	
+		AddStat(self, STAT_WEAPONFIRED, WPN_PIPELAUNCHER);
 		newmis = spawn ();
 		newmis.voided=0;
 		newmis.owner = self;

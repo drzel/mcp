@@ -524,6 +524,8 @@ void SetAliases3(entity e) =
 	CreateAlias(e,"-slot3", IMP_QSHOT3_STOP);
 	CreateAlias(e,"-slot4", IMP_QSHOT4_STOP);
 	CreateAlias(e,"1hp", IMP_1HP);
+	CreateAlias(e,"printstats", IMP_PRINTSTATS);
+
 };
 
 void SetAliases2(entity e) =

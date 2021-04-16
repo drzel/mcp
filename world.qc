@@ -169,7 +169,7 @@ void() InitBodyQue =
 void(entity ent) CopyToBodyQue =
 {
 	bodyque_head.angles = ent.angles;
-	FO_SetModel(bodyque_head, "progs/beta1/mcp_player2.mdl", DIM_WORLD);
+	FO_SetModel(bodyque_head, FPATH_PLAYERMDL, DIM_WORLD);
 	//bodyque_head.model = ent.model;
 	bodyque_head.skin = ent.skin;
 	bodyque_head.modelindex = ent.modelindex;
@@ -181,6 +181,24 @@ void(entity ent) CopyToBodyQue =
 	setorigin (bodyque_head, ent.origin);
 	setsize (bodyque_head, ent.mins, ent.maxs);
 	bodyque_head = bodyque_head.owner;
+};
+
+void corpsehead_touch() = 
+{
+	if(other.classname == "player" && other.deadflag == DEAD_NO)
+	{
+		if(vlen(self.velocity) == 0)
+		{
+			self.solid = SOLID_TRIGGER;
+			self.movetype = MOVETYPE_BOUNCE;
+			//self.velocity = normalize(other.velocity) * vlen(other.velocity);
+			self.velocity = other.velocity * 2;
+			self.velocity_z = self.velocity_z + 128;
+			self.avelocity_x = random()*600;
+			self.avelocity_y = random()*600;
+			self.avelocity_z = random()*600;
+		}
+	}
 };
 
 void CreateCorpse (entity oldent) =
@@ -201,6 +219,12 @@ void CreateCorpse (entity oldent) =
 	
 	new.think = SUB_Remove;
 	new.nextthink = time + 45;
+	if(oldent.model == "progs/h_player.mdl")
+	{
+		new.solid = SOLID_TRIGGER;
+		new.touch = corpsehead_touch;
+	}
+		
 };
 
 void(void() fnc)CheckSpawn = {

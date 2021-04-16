@@ -230,7 +230,7 @@ void() barrel_explode =
 	self.takedamage = DAMAGE_NO;
 	self.classname = "explo_box";
 	// did say self.owner
-	T_RadiusDamage (self, self, 160, world, "");
+	//T_RadiusDamage (self, self, 160, world, "");
 	WriteByte (MSG_MULTICAST, SVC_TEMPENTITY);
 	WriteByte (MSG_MULTICAST, TE_EXPLOSION);
 	WriteCoord (MSG_MULTICAST, self.origin_x);

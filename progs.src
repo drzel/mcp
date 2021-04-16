@@ -36,3 +36,4 @@ mcp_reload.qc
 mcp_spawn.qc
 mcp_misc.qc
 mcp_quickshot.qc
+mcp_stats.qc

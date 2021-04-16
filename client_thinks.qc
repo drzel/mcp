@@ -175,6 +175,11 @@ void() PlayerPostThink =
 	//{
 	//		GoombaStomp();
 	//}
+	if (self.flags & FL_ONGROUND && self.hasbeenmidaired)
+	{
+		KillMidairEnt();
+		self.hasbeenmidaired = 0;
+	}
 	if ((self.jump_flag < -300) && (self.flags & FL_ONGROUND) )
 	{
 		if (self.watertype == CONTENT_WATER)

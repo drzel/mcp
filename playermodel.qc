@@ -1,6 +1,6 @@
 void() bubble_bob;
 void() SpawnNail;
-void() DetStickys;
+
 void() muzzleflash;
 /*
 ==============================================================================
@@ -185,6 +185,7 @@ void shootminigun() =
 		local vector dirm;
 		dirm = aim (self,100000.000);
 		//FireBullets (4,dirm,'0.050 0.050 0');
+		AddStat(self, STAT_WEAPONFIRED, WPN_MINIGUN);
 		FireBullets (5,dirm,'0.04 0.04 0');
 		FO_Sound(self, CHAN_WEAPON, "beta1/minigun_shoot.wav", 1, ATTN_NORM);
 		self.clip_curr_primary = self.clip_curr_primary - 1;
@@ -821,6 +822,7 @@ void() PlayerDie =
 	DropArmourShard();
 	DropHealthPack();
 	ClearPlayerState();
+
 	
 	self.view_ofs = '0 0 -8';
 	self.deadflag = DEAD_DYING;
@@ -867,7 +869,7 @@ void() PlayerDie =
 
 void() set_suicide_frame =
 {	// used by klill command and diconnect command
-	if (self.model != "progs/beta1/mcp_player2.mdl")
+	if (self.model != FPATH_PLAYERMDL)
 	{
 		//bprint(2,"zzzz\n");
 		return;	// allready gibbed
