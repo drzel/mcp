@@ -57,7 +57,8 @@ void TogglePlayerReady(float ps) =
 				}
 				te = find(te,classname,"player");
 			}
-			local float fsneeded = floor(((totalplayers / 2) + 1) - forcestarters);
+			//local float fsneeded = floor(((totalplayers / 2) + 1) - forcestarters);
+			local float fsneeded = floor(((totalplayers / 2)) - forcestarters);
 			if (fsneeded == 0)
 			{
 				bprint(2, strcat(self.netname," is \sready\s and wants to \sforcestart\s!\nforcestart successful, good luck!.\n"));
@@ -76,48 +77,8 @@ void TogglePlayerReady(float ps) =
 void DownloadShit(float imp) =
 {
 	self.impulse = 0;
-	
-	if(imp == IMP_GB1)
-	{
-		stuffcmd(self, "download skins/blue_rec.pcx\n");
-	}
-	else if(imp == IMP_GB2)
-	{
-		stuffcmd(self, "download skins/blue_ass.pcx\n");
-	}
-	if(imp == IMP_GB3)
-	{
-		stuffcmd(self, "download skins/blue_fig.pcx\n");
-	}
-	else if(imp == IMP_GB4)
-	{
-		stuffcmd(self, "download skins/blue_bom.pcx\n");
-	}
-	if(imp == IMP_GB5)
-	{
-		stuffcmd(self, "download skins/blue_sup.pcx\n");
-	}
-	else if(imp == IMP_GR1)
-	{
-		stuffcmd(self, "download skins/red_rec.pcx\n");
-	}
-	else if(imp == IMP_GR2)
-	{
-		stuffcmd(self, "download skins/red_ass.pcx\n");
-	}
-	else if(imp == IMP_GR3)
-	{
-		stuffcmd(self, "download skins/red_fig.pcx\n");
-	}
-	else if(imp == IMP_GR4)
-	{
-		stuffcmd(self, "download skins/red_bom.pcx\n");
-	}
-	else if(imp == IMP_GR5)
-	{
-		stuffcmd(self, "download skins/red_sup.pcx\n");
-	}
-	else if(imp == IMP_GM1)
+
+	if(imp == IMP_GM1)
 	{
 		stuffcmd(self, "download progs/bolt.mdl\n");
 	}

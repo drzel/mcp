@@ -138,4 +138,7 @@ void PrintStats(entity e);
 void AddDamageStat(entity targ, entity inflictor, entity attacker, float damage);
 void AddRadiusHitStat(entity attacker, string dtype);
 void(entity inflictor, entity attacker, float damage, entity ignore, string dtype, float addstat) MCP_RadiusDamage;
-
+void UpdateAwardString(entity e, float step, float rng);
+void RefreshAwardString(entity e);
+string Float2MapString(float f);
+void MenuThink();

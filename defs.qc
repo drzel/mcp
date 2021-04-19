@@ -789,7 +789,7 @@ float playerdims;	//used player dimensions
 .float nextrespawn;
 .float nextpingpoint;
 .float killstreakcount;
-.float mgunnerspeed;  //using for mgunner shoulder
+.float mgunnerspeed;  //using for mgunner shouldercharge
 
 .float heat;
 
@@ -816,13 +816,14 @@ float playerdims;	//used player dimensions
 .float grencount;
 .float next_cellregen;
 .float next_healtharmourregen;
+.float maxarmour;
 
 string cprint_waitingforplayers;
 .string cprint_obj;
 .string cprint_id;
 .float cprint_time;
-.string awardshowstring;
-
+.string awardstring;
+.float votemap;
 //.float hasstomped;
 //.float isleaping;
 typedef struct {
@@ -992,7 +993,7 @@ typedef struct {
 //add state		self.playerstate = self.playerstate | PLAYERSTATE_RELOADING
 //remove state		self.playerstate = self.playerstate - (self.playerstate & PLAYERSTATE_RELOADING)
 
-#define MCPVERSION				"version \sbeta 1.8\s (16/apr/2021)"
+#define MCPVERSION				"version \sbeta 1.9\s (18/apr/2021)"
 
 #define FLAG_RESET				15
 #define FLAG_TOSSSPEED				600
@@ -1051,14 +1052,14 @@ typedef struct {
 #define MATCHSTATE_LIVE				3
 #define MATCHSTATE_FINISH			4
 
-#define MAXSCORE				100	//scorelimit
+#define MAXSCORE				3	//scorelimit
 
 #define	NAIL_SPEED				1500
 #define ROCKET_SPEED				1000
 
 #define RELOADTIME_SHOTGUN			0.25
 //#define RELOADTIME_SUPERSHOTGUN		0.375
-#define RELOADTIME_SUPERSHOTGUN			0.5
+#define RELOADTIME_SUPERSHOTGUN			0.8
 #define FIRERATE_SUPERSHOTGUN			0.6
 #define RELOADTIME_NAILGUN			0.1
 #define RELOADTIME_RAILGUN			1.5
@@ -1069,7 +1070,7 @@ typedef struct {
 
 
 
-#define FLASH_DURATION				5
+#define FLASH_DURATION				2.5
 //#define SPECIAL_COOLDOWN_RECON			1
 //#define SPECIAL_COOLDOWN_ASSASSIN		20
 //#define SPECIAL_COOLDOWN_FIGHTER		3
@@ -1109,6 +1110,7 @@ typedef struct {
 #define MENU_NONE				0
 #define	MENU_SELECTTEAM				1
 #define	MENU_SELECTROLE				2
+#define MENU_VOTEMAP				3
 
 #define C4DAMAGE_EXPLODE			200
 #define C4_ARMTIME				1.5
@@ -1240,17 +1242,7 @@ typedef struct {
 #define IMP_THROWMCPFLAG		148
 
 #define IMP_MCPHELP			150
-#define IMP_GB1				151
-#define IMP_GB2				152
-#define IMP_GB3				153
-#define IMP_GB4				154
-#define IMP_GB5				155
 
-#define IMP_GR1				156
-#define IMP_GR2				157
-#define IMP_GR3				158
-#define IMP_GR4				159
-#define IMP_GR5				160
 
 #define IMP_GM1				161
 #define IMP_GM2				162

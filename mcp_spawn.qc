@@ -278,7 +278,7 @@ void SpawnPlayerZut () =
 
 		self.health = 1;
 		self.armortype = 0;
-		self.armorvalue = 0;
+		self.maxarmour = 0;
 		setmodel (self, "");
 		ShowMenu(MENU_SELECTTEAM);
 		self.touch = SUB_Null;
@@ -291,7 +291,7 @@ void SpawnPlayerZut () =
 		sprint(self,PRINT_HIGH, "playing as recon.\n");
 		self.weapon = WPN_NAILGUN;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_RECON;
+		self.maxarmour = ARMOUR_MAX_RECON;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_NAILGUN;
@@ -310,7 +310,7 @@ void SpawnPlayerZut () =
 		sprint(self, PRINT_HIGH, "playing as assassin.\n");
 		self.weapon = WPN_RAILGUN;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_ASSASSIN;
+		self.maxarmour = ARMOUR_MAX_ASSASSIN;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_RAILGUN;
@@ -328,7 +328,7 @@ void SpawnPlayerZut () =
 		sprint(self, PRINT_HIGH, "playing as fighter.\n");
 		self.weapon = WPN_ROCKETLAUNCHER;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_FIGHTER;
+		self.maxarmour = ARMOUR_MAX_FIGHTER;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_ROCKETLAUNCHER;
@@ -346,7 +346,7 @@ void SpawnPlayerZut () =
 		sprint(self, PRINT_HIGH, "playing as a bomber.\n");
 		self.weapon = WPN_PIPELAUNCHER;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_BOMBER;
+		self.maxarmour = ARMOUR_MAX_BOMBER;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_PIPELAUNCHER;
@@ -364,7 +364,7 @@ void SpawnPlayerZut () =
 		sprint(self, PRINT_HIGH, "playing as support.\n");
 		self.weapon = WPN_SHAFT;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_SUPPORT;
+		self.maxarmour = ARMOUR_MAX_SUPPORT;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_SHAFT;
@@ -382,7 +382,7 @@ void SpawnPlayerZut () =
 		sprint(self, PRINT_HIGH, "playing as minigunner.\n");
 		self.weapon = WPN_MINIGUN;
 		self.items = self.items | IT_ARMOR2;
-		self.armorvalue = ARMOUR_MAX_MGUNNER;
+		self.maxarmour = ARMOUR_MAX_MGUNNER;
 		FO_SetModel(self, FPATH_PLAYERMDL, DIM_WORLD);
 		modelindex_player = self.modelindex;
 		self.clip_curr_primary = CLIP_MAX_MINIGUN;
@@ -393,6 +393,7 @@ void SpawnPlayerZut () =
 		self.ammo_nails = self.grencount;
 		self.touch = mcpplayer_touch;
 	}
+	self.armorvalue = self.maxarmour;
 	AssignPlayerDim();
 	player_stand1();
 	SetTeamFragsColourName();

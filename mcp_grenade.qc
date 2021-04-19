@@ -283,7 +283,7 @@ void MarkPlayer(entity targ, entity attacker) =
 	}	
 	if(found != world)
 	{
-		te.bubble_count = time + 5;
+		found.bubble_count = time + 5;
 		return;
 	}
 	

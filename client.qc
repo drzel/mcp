@@ -134,7 +134,7 @@ void() execute_changelevel =
 	intermission_running = 1;
 	
 // enforce a wait time before allowing changelevel
-	intermission_exittime = time + 15;
+	intermission_exittime = time + 3;
 
 	pos = FindIntermission ();
 
@@ -193,7 +193,6 @@ float(vector v) CheckSpawnPoint =
 {
 	return FALSE;
 };
-
 
 
 

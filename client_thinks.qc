@@ -100,13 +100,20 @@ void() PlayerPreThink =
 {
 	local   float   mspeed, aspeed;
 	local   float   r;
-	
+
 	if (intermission_running)
 	{
 		IntermissionThink ();   // otherwise a button could be missed between
 		return;                                 // the think tics
 	}
-
+	if(matchstate == MATCHSTATE_FINISH)
+	{
+		self.movetype = MOVETYPE_NONE;
+		self.solid = SOLID_NOT;
+		self.takedamage = DAMAGE_NO;
+		if(self.deadflag != DEAD_NO)
+			respawn();
+	}
 	if (self.view_ofs == '0 0 0')
 		return;         // intermission or finale
 
@@ -163,7 +170,14 @@ void() PlayerPostThink =
 {
 	local   float   mspeed, aspeed;
 	local   float   r;
-
+	if(matchstate == MATCHSTATE_FINISH)
+	{
+		self.movetype = MOVETYPE_NONE;
+		self.solid = SOLID_NOT;
+		self.takedamage = DAMAGE_NO;
+		if(self.deadflag != DEAD_NO)
+			respawn();
+	}
 //dprint ("post think\n");
 	if (self.view_ofs == '0 0 0')
 		return;         // intermission or finale

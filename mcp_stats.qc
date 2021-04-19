@@ -1,6 +1,10 @@
 
-
-
+void RefreshAwardString(entity e) =
+{
+	if(self.menu != MENU_NONE)
+		return;
+	centerprint(e, e.awardstring);
+};
 
 string PrintFlagStats(entity e) =
 {

@@ -269,25 +269,8 @@ ROCKETS
 void MidAir(entity attacker, entity targ, float dist) =
 {
 	local entity te;
-	
 	local float rng = MyRNG(3);
-	if(rng == 1)
-	{
-		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair1.wav");
-		SoundTeam(TEAM_RED, world,"beta1/voice_midair1.wav");
-	}
-	else if (rng == 2)
-	{
-		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair2.wav");
-		SoundTeam(TEAM_RED, world,"beta1/voice_midair2.wav");
-	}
-	else
-	{
-		SoundTeam(TEAM_BLUE, world,"beta1/voice_midair3.wav");
-		SoundTeam(TEAM_RED, world,"beta1/voice_midair3.wav");
-	}
-	
-		
+
 	
 	if(targ.hasbeenmidaired)
 	{
@@ -298,14 +281,39 @@ void MidAir(entity attacker, entity targ, float dist) =
 			if (te.owner == targ && te.gren == attacker && te != world) 
 			{
 				te.cnt++;
-				AddStat(attacker, STAT_ROCKETMIDAIR, 1);
-				sprint(self.owner,PRINT_HIGH,strcat("you midaired ",targ.classname, "x",ftos(1), " (",ftos(dist),")\n"));	
+				AddStat(attacker, STAT_ROCKETMIDAIR, te.cnt);
+				sprint(attacker,PRINT_HIGH,strcat("you midaired ",targ.classname, "x",ftos(te.cnt), " (",ftos(dist),")\n"));
+				if(te.cnt == 2)
+				{
+					if(rng == 1)
+					{
+						SoundTeam(TEAM_BLUE, world,"beta1/voice_midair1.wav");
+						SoundTeam(TEAM_RED, world,"beta1/voice_midair1.wav");
+					}
+					else if (rng == 2)
+					{
+						SoundTeam(TEAM_BLUE, world,"beta1/voice_midair2.wav");
+						SoundTeam(TEAM_RED, world,"beta1/voice_midair2.wav");
+					}
+					else
+					{
+						SoundTeam(TEAM_BLUE, world,"beta1/voice_midair3.wav");
+						SoundTeam(TEAM_RED, world,"beta1/voice_midair3.wav");
+					}
+				}
+				if(te.cnt >= 3)
+				{
+					SoundTeam(TEAM_BLUE, world,"beta1/mlg.wav");
+					SoundTeam(TEAM_RED, world,"beta1/mlg.wav");
+				}
 			}
 			te = find(te, classname, "consecmidaircounter");
 		}
 	}
 	else
 	{
+		if(dist > 64)		//trying to weed out initial baby middys
+			return;
 		te = spawn();
 		te.classname = "consecmidaircounter";
 		te.owner = targ;
@@ -315,7 +323,24 @@ void MidAir(entity attacker, entity targ, float dist) =
 		te.cnt = 1;
 		AddStat(attacker, STAT_ROCKETMIDAIR, 1);
 		
-		sprint(self.owner,PRINT_HIGH,strcat("you midaired ",targ.classname, "x",ftos(1), " (",ftos(dist),")\n"));	
+		sprint(attacker,PRINT_HIGH,strcat("you midaired ",targ.classname, " x",ftos(1), " (",ftos(dist),"dist)\n"));
+
+			if(rng == 1)
+			{
+				SoundTeam(TEAM_BLUE, world,"beta1/voice_midair1.wav");
+				SoundTeam(TEAM_RED, world,"beta1/voice_midair1.wav");
+			}
+			else if (rng == 2)
+			{
+				SoundTeam(TEAM_BLUE, world,"beta1/voice_midair2.wav");
+				SoundTeam(TEAM_RED, world,"beta1/voice_midair2.wav");
+			}
+			else
+			{
+				SoundTeam(TEAM_BLUE, world,"beta1/voice_midair3.wav");
+				SoundTeam(TEAM_RED, world,"beta1/voice_midair3.wav");
+			}
+			
 	}
 	targ.hasbeenmidaired = 1;
 	AddStat(attacker, STAT_ROCKETMIDAIRDIST, dist);
@@ -888,9 +913,7 @@ void() MenuInputImpulses =
 void() DeadOrAliveImpulses = 
 {	
 
-	if(self.impulse == IMP_GB1 || self.impulse == IMP_GB2 || self.impulse == IMP_GB3 ||self.impulse == IMP_GB4 || self.impulse == IMP_GB5 || 
-	self.impulse == IMP_GR1 || self.impulse == IMP_GR2 || self.impulse == IMP_GR3 || self.impulse == IMP_GR4 || self.impulse == IMP_GR5 ||  
-	self.impulse == IMP_GM1 || self.impulse == IMP_GM2 ||  self.impulse == IMP_GM3)
+	if(self.impulse == IMP_GM1 || self.impulse == IMP_GM2 ||  self.impulse == IMP_GM3)
 	{
 		DownloadShit(self.impulse);
 	}
@@ -942,7 +965,14 @@ void() DeadOrAliveImpulses =
 		ChangeRoleMenu();
 	
 	if(self.impulse == IMP_CREATEPING)
+	{
+		self.impulse = 0;
+	
+			bprint(2,strcat(self.classname, " hullo\n"));
+		
+		return;
 		CreatePingPoint();
+	}
 	
 	if (self.impulse == IMP_NULL)	//using this for tf aliases to stop unknown command spam ie. discard, flaginfo
 	{

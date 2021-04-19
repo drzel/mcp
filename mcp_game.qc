@@ -192,7 +192,7 @@ void DeathMCPFlag () =
 	self.items = self.items - (self.items & IT_KEY1);
 };
 
-void ThrowMCPFlag () =
+/*void ThrowMCPFlag () =
 {
 	self.impulse = 0;
 	if(self.classname != "player")
@@ -217,6 +217,32 @@ void ThrowMCPFlag () =
 		mcpflag.velocity = mcpflag.velocity * FLAG_TOSSSPEED; //400
 		mcpflag.velocity_z = 200;
 	}
+
+};*/
+
+void ThrowMCPFlag () =
+{
+	self.impulse = 0;
+	if(self.classname != "player")
+		return;
+	if(mcpflag.owner != self)
+		return;
+	
+	ChangeMCPFlagState(MCPFLAGSTATE_THROWN, self);
+	self.items = self.items - (self.items & IT_KEY1);
+	
+	mcpflag.velocity_z = FLAG_TOSSSPEED;
+	mcpflag.velocity_x = -50 + (random() * 100);
+	mcpflag.velocity_y = -50 + (random() * 100);
+	
+	 makevectors(self.v_angle);
+        if (self.v_angle_x < 25) {
+            mcpflag.velocity = (v_forward * FLAG_TOSSSPEED) + (v_up * 200);
+        } else {
+            mcpflag.velocity = aim(self, 10000);
+            mcpflag.velocity = mcpflag.velocity * FLAG_TOSSSPEED;
+            mcpflag.velocity_z = 200;
+        }
 
 };
 
@@ -496,6 +522,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_GREEN;
 		}
 		bprint(2, strcat(mcpflag.owner.netname, " \shas thrown the flag!\s\n"));
+		mcpflag.owner.effects = 0;
 		if(!(mcpflag.owner.dimension_see & DIM_FLAG)  && mcpflag.owner.FlashTime <= 0)
 			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
 		AddStat(mcpflag.owner, STAT_FLAGTHROW, 1);
@@ -531,6 +558,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_DIMLIGHT;
 				mcpflag.effects = mcpflag.effects | EF_GREEN;
 		}
+		mcpflag.owner.effects = 0;
 		bprint(2, strcat(mcpflag.owner.netname, " \sdropped the flag!\s\n"));
 		if(!(mcpflag.owner.dimension_see & DIM_FLAG) && mcpflag.owner.FlashTime <= 0)
 			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
@@ -577,6 +605,8 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 				mcpflag.effects = mcpflag.effects | EF_DIMLIGHT;
 				mcpflag.effects = mcpflag.effects | EF_RED;
 		}
+		o.effects = 0;
+		o.effects = o.effects | EF_BRIGHTLIGHT;
 		bprint(2, strcat(o.netname, " \shas picked up the flag!\s\n"));
 		
 		if(mcpflag.owner.classname == "info_mcpflag_capture")
@@ -635,6 +665,7 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 			mcpflag.effects = mcpflag.effects | EF_DIMLIGHT;
 			mcpflag.effects = mcpflag.effects | EF_RED;
 		}
+		mcpflag.owner.effects = 0;
 		AddStat(mcpflag.owner, STAT_FLAGCAP, 1);
 		if(!(mcpflag.owner.dimension_see & DIM_FLAG)  && mcpflag.owner.FlashTime <= 0)
 			mcpflag.owner.dimension_see = mcpflag.owner.dimension_see | DIM_FLAG;
@@ -655,7 +686,16 @@ void ChangeMCPFlagState(float zfstate,entity o) =
 	mcpflag.playerstate = zfstate;
 };
 
-void gm_think_finish()=
+void awardshow_think()=
+{
+	if(time > self.cnt)
+		remove(self);
+		
+	RefreshAwardString(self.owner);
+	self.nextthink = time + 0.5;
+};
+
+/*void gm_think_finish()=
 {
 	local float winningteam;
 	if(bluescore > redscore)
@@ -663,9 +703,11 @@ void gm_think_finish()=
 	else
 		winningteam = TEAM_RED;
 		
+	local entity p;
+	
 	if(self.bubble_count == 0)
 	{
-		local entity p = find(world, classname, "player");
+		p = find(world, classname, "player");
 		while (p != world) 
 		{
 			if (p.team_no == TEAM_BLUE || p.team_no == TEAM_RED) 
@@ -689,29 +731,234 @@ void gm_think_finish()=
 	}
 	if(self.bubble_count == 1)
 	{
-		local entity p2 = find(world, classname, "player");
-		while (p2 != world) 
+		p = find(world, classname, "player");
+		while (p != world) 
 		{
 			if(bluescore == 0 || redscore == 0) //flawless
 			{
-				if (p2.team_no == winningteam) 
-					stuffcmd(p2, "play beta1/voice_flawless.wav\n");
+				if (p.team_no == winningteam) 
+					stuffcmd(p, "play beta1/voice_flawless.wav\n");
 				else
-					stuffcmd(p2, "play beta1/voice_yousuck.wav\n");
+					stuffcmd(p, "play beta1/voice_yousuck.wav\n");
 			}
 			else if(fabs(bluescore - redscore) == 1) //holyshit 100-99
 			{
-				stuffcmd(p2, "play beta1/voice_holyshit.wav\n");
+				stuffcmd(p, "play beta1/voice_holyshit.wav\n");
 			}
-			p2 = find(p2, classname, "player");
+			p = find(p, classname, "player");
 		}
 		
 		self.bubble_count = self.bubble_count + 1;
-		self.nextthink = time + 9999;
+		self.nextthink = time + 2;
 		return;
+	}
+	if(self.bubble_count >= 2 && self.bubble_count < 10)
+	{
+		local float rng = MyRNG(4);
+		
+		p = find(world, classname, "player");
+		while (p != world) 
+		{
+			if(self.bubble_count == 2)
+			{
+				local entity te = spawn();
+				te.owner = p;
+				te.classname = "awardshow";
+				te.nextthink = time;
+				te.think = awardshow_think;
+				te.cnt = time + 60;
+			}
+			UpdateAwardString(p, self.bubble_count, rng);
+			p = find(p, classname, "player");
+		}
+
+		
+		self.bubble_count = self.bubble_count + 1;
+		self.nextthink = time + 4;
+		return;
+		
+	}
+	if(self.bubble_count == 10)
+	{
+		self.nextthink = time + 999;
+		return;
+		
 	}
 	
 	
+};*/
+void gm_think_votemap()=
+{
+	self.nextthink = time + 1;
+
+	if(self.bubble_count == 0)
+	{
+		local float rng = MyRNG(2);
+		local entity p = find(world, classname, "player");
+		while (p != world) 
+		{
+			local float found = 0;
+			local entity menuent = find (world, classname, "menu");	//look for existing menuent
+			while (menuent) 
+			{	
+				if (menuent.owner == p) 
+				{
+					found = 1;
+				}
+				menuent = find (menuent, classname, "menu");
+			}
+	
+			if(found == 0)
+			{
+				local entity te;					//create a menu ent
+				te = spawn();			
+				te.classname = "menu";
+				te.owner = p;
+				te.think = MenuThink;
+				te.nextthink = time + 0.1;
+			}
+	
+			p.menu = MENU_VOTEMAP;
+			if(rng == 1)
+				stuffcmd(p, "play beta1/time2choose1.wav\n"); 
+			else
+				stuffcmd(p, "play beta1/time2choose2.wav\n"); 
+			p = find(p, classname, "player");
+		}
+	
+	}
+	if(self.bubble_count >= 9)
+	{
+		local entity p2 = find(world, classname, "player");
+		while (p2 != world) 
+		{
+			stuffcmd(p2, "play misc/menu2.wav\n"); 
+			p2 = find(p2, classname, "player");
+		}
+	}
+	
+	
+	if(self.bubble_count >= 15)
+	{
+		
+		local float a = 0;
+		local float b = 0;
+		local float c = 0;
+		local float d = 0;
+		local float win = 0;
+		local entity p3 = find(world, classname, "player");
+		while (p3 != world) 
+		{
+			if(p3.votemap == 1)
+				a++;
+			if(p3.votemap == 2)
+				b++;
+			if(p3.votemap == 3)
+				c++;
+			if(p3.votemap == 4)
+				d++;
+				
+			p3 = find(p3, classname, "player");
+		}
+		
+		if(a>b) 
+		{ 
+			if(a>c) 
+			{ 
+				if(a>d) 
+				{   
+					win = 1; 
+				} 
+				else 
+				{ 
+					win = 4; 
+				} 
+			} 
+		} 
+		else if(b>c) 
+		{ 
+			if(b>d) 
+			{ 
+				win = 2; 
+			} 
+			else 
+			{ 
+				win= 4; 
+			} 
+		}	 
+		else if(c>d) 
+		{ 
+			win = 3; 
+		} 
+		else 
+		{ 
+			win = 4; 
+		} 
+	
+		bprint(2,strcat(Float2MapString(win)," wins, changing map.\n"));
+		changelevel(Float2MapString(win));
+		
+		
+	}
+	self.bubble_count++;
+};
+
+void gm_think_finish()=
+{
+	local entity p;
+	if(self.bubble_count == 23)
+	{
+		p = find(world, classname, "awardshow");
+		while (p != world) 
+		{
+			p.think = SUB_Remove;
+			p.nextthink = time;
+			p = find(p, classname, "awardshow");
+		}
+		
+
+		self.think = gm_think_votemap;
+		self.nextthink = time;
+		self.bubble_count = 0;
+		return;
+	}
+	
+	local float rng = MyRNG(8);
+	p = find(world, classname, "player");
+	while (p != world) 
+	{
+		if(self.bubble_count == 0)
+		{			
+			local entity te = spawn();
+			te.owner = p;
+			te.classname = "awardshow";
+			te.nextthink = time;
+			te.think = awardshow_think;
+			te.cnt = time + 60;
+			
+			
+		}
+		
+		
+		UpdateAwardString(p,self.bubble_count, rng);
+		p = find(p, classname, "player");
+
+	}
+	
+	if(self.bubble_count == 0)
+		self.nextthink = time + 3;
+	else if(self.bubble_count == 1)
+		self.nextthink = time + 3;
+	else if(self.bubble_count == 2)
+		self.nextthink = time + 2;
+	else if(self.bubble_count == 3)
+		self.nextthink = time + 4;
+	//else if(self.bubble_count == 4)
+	//	self.nextthink = time + 4;
+	else 
+		self.nextthink = time + 1.5;
+	self.bubble_count = self.bubble_count + 1;
+
 };
 
 void gm_think_live() =
@@ -777,7 +1024,7 @@ void gm_think_live() =
 		self.think = gm_think_finish;
 		self.bubble_count = 0;
 		self.nextthink = time + 1;
-		NextLevel ();
+		//NextLevel ();
 	}
 };
 
@@ -846,6 +1093,26 @@ void gm_think_countdown() =
 	self.bubble_count = self.bubble_count - 1;
 };
 
+void ServerForceStart() =
+{	
+		matchstate = MATCHSTATE_COUNTDOWN;
+		self.think = gm_think_countdown;
+		self.bubble_count = 5;
+		self.nextthink = time + 1;
+		bprint(2,"\sall players ready! get psyched!\s\n");
+		
+		local entity p = find(world, classname, "player");
+		while (p != world) 
+		{
+			
+			if (p.netname != "") 
+			{
+				stuffcmd(p, "play beta1/readyall.wav\n");
+			}
+			p = find(p, classname, "player");
+		}
+		return;
+};
 
 void gm_think_waitforplayers() =
 {

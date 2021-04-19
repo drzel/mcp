@@ -1135,75 +1135,44 @@ void W_SpecialSkill() =
 };
 void RegenHealthArmour() =
 {
-	if (time <= self.next_healtharmourregen)
+	//if(self.team_no != TEAM_RED || self.team_no != TEAM_BLUE)
+	//	return;
+	
+	if(self.role == ROLE_NONE)
 		return;
 	
-	self.next_healtharmourregen = time + 1;
+	if(self.deadflag != DEAD_NO)
+		return;
 	
 	if(self.health > 100)			//health rot for support overheal
 	{
 		self.health = self.health - 1;
 	}
-	if(self.role == ROLE_FIGHTER && self.armorvalue < ARMOUR_MAX_FIGHTER)
+	
+	
+	if (time <= self.next_healtharmourregen)
+		return;
+	
+	self.next_healtharmourregen = time + 1;
+	
+	if(self.health < 100)
 	{
-		if(infokey(self, "regensound") != "0")
-			stuffcmd(self, "play beta1/regenarmour.wav\n");
-		self.armorvalue  = self.armorvalue + 2;
-		if(self.armorvalue > ARMOUR_MAX_FIGHTER)
-			self.armorvalue = ARMOUR_MAX_FIGHTER;
-	}
-	if(self.role == ROLE_RECON && self.health < 100)
-	{	
-		if(infokey(self, "regensound") != "0")
-			stuffcmd(self, "play beta1/regenhealth.wav\n");
-		
 		self.health = self.health + 2;
 		if(self.health > 100)
 			self.health = 100;
-			
+		if(infokey(self, "regensound") != "0")
+			stuffcmd(self, "play beta1/regenhealth.wav\n");
 	}
-	if(self.role == ROLE_BOMBER)
+	
+	if(self.armorvalue < self.maxarmour)
 	{
-		if(self.armorvalue  < ARMOUR_MAX_BOMBER || self.health < 100)
-		{
-			if(infokey(self, "regensound") != "0")
-				stuffcmd(self, "play beta1/regenhealtharmour.wav\n");
-		}
-		if(self.health < 100)
-		{
-			self.health = self.health + 2;
-			
-			if(self.health > 100)
-				self.health = 100;
-		}
-		if(self.armorvalue < ARMOUR_MAX_BOMBER)
-		{
-			self.armorvalue = self.armorvalue + 2;
-			if(self.armorvalue > ARMOUR_MAX_BOMBER)
-				self.armorvalue = ARMOUR_MAX_BOMBER;
-		}
+		self.armorvalue = self.armorvalue + 2;
+		if(self.armorvalue > self.maxarmour)
+			self.armorvalue = self.maxarmour;
+		if(infokey(self, "regensound") != "0")
+			stuffcmd(self, "play beta1/regenarmour.wav\n");
 	}
-	if(self.role == ROLE_MGUNNER)
-	{
-		if(self.armorvalue  < ARMOUR_MAX_MGUNNER || self.health < 100)
-		{
-			if(infokey(self, "regensound") != "0")
-				stuffcmd(self, "play beta1/regenhealtharmour.wav\n");
-		}
-		if(self.health < 100)
-		{
-			self.health = self.health + 2;
-			
-			if(self.health > 100)
-				self.health = 100;
-		}
-		if(self.armorvalue < ARMOUR_MAX_MGUNNER)
-		{
-			self.armorvalue = self.armorvalue + 2;
-			if(self.armorvalue > ARMOUR_MAX_MGUNNER)
-				self.armorvalue = ARMOUR_MAX_MGUNNER;
-		}
-	}
+
 };
 
 void RegenCells() =

@@ -10,6 +10,9 @@ void() W_WeaponFrame =
 {
 	
 	MenuInputImpulses();
+	if(matchstate == MATCHSTATE_FINISH)
+		return;
+		
 	DeadOrAliveImpulses();
 	AliveImpulses();
 

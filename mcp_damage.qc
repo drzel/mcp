@@ -162,7 +162,7 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage =
 	local   float   take;
 	local   string  s;
 	local float knock;
-
+	
 	if (!targ.takedamage)
 		return;
 

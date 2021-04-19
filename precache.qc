@@ -356,6 +356,10 @@ void zPreCache() =
 	precache_sound("beta1/insideout.wav");
 	precache_sound("beta1/alert.wav");
 	precache_sound("beta1/markplayer.wav");
+	precache_sound("beta1/droll.wav");
+	precache_sound("beta1/bdumtish.wav");
+	precache_sound("beta1/time2choose1.wav");
+	precache_sound("beta1/time2choose2.wav");
 	
 	precache_sound("beta1/voice_enemyhasflag.wav");
 	precache_sound("beta1/voice_teamhasflag.wav");

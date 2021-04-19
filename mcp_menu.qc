@@ -1,5 +1,40 @@
 
+string Float2MapString(float f) =
+{
+	local string s;
+	
+	if(f == 1)
+		s = "mcp-xpress3_b1";
+	if(f == 2)
+		s = "mcp-pineapple_b2";
+	if(f == 3)
+		s = "mcp-dm3_b1";
+	if(f == 4)
+		s = "mcp-castle_a2";
+		
+	return s;
+};
 
+string GetVoteCountString(float f) =
+{
+	local string s = "";
+	local float res = 0;
+	local entity te = find (world, classname, "player");
+	while (te) 
+	{
+		if (te.votemap == f) 
+		{
+			res++;
+		}
+		te = find (te, classname, "player");
+		
+	}
+	if (res == 0)
+		s = " "; 
+	else
+		s = ftos(res);
+	return s;
+};
 void() MenuThink = 
 {
 	self.nextthink = time + 0.1;
@@ -186,6 +221,20 @@ void(float imp) MenuInput =
 			}
 			sprint(self, PRINT_HIGH, s_fullrole);
 		}
+		
+
+	}
+	
+	if(self.menu == MENU_VOTEMAP)
+	{
+		if(imp > 0 && imp < 5)
+		{
+			self.impulse = 0;
+			self.votemap = imp;
+			sprint(self, PRINT_HIGH, strcat("you vote for ",Float2MapString(imp),"\n"));
+			stuffcmd(self, "play beta1/error.wav\n");
+
+		}
 
 	}
 };
@@ -196,6 +245,7 @@ string MenuString(float menuType)
 	local string returnstring;
 	local float desLength = 35;
 	local string s_selectrole 	= "select class";
+	local string s_votemap		= "vote for next map";
 	local string s_endline		= "\n";
 	//local string s_endline10	="\n\n\n\n\n\n\n\n\n\n";
 	//local string s_endline120	="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
@@ -291,6 +341,31 @@ string MenuString(float menuType)
 		return returnstring;
 	}
 	
+	if (menuType == MENU_VOTEMAP)
+	{
+		local string timeleft = ftos(15 - gm.bubble_count);
+		local string vote1 = strpad(-2,GetVoteCountString(1));
+		local string vote2 = strpad(-2,GetVoteCountString(2));
+		local string vote3 = strpad(-2,GetVoteCountString(3));
+		local string vote4 = strpad(-2,GetVoteCountString(4));
+		
+		local string map1 = strpad(22,Float2MapString(1));
+		local string map2 = strpad(22,Float2MapString(2));
+		local string map3 = strpad(22,Float2MapString(3));
+		local string map4 = strpad(22,Float2MapString(4));
+		
+		line1 = strcat(s_votemap," (",timeleft,")\n");
+		line2 = strcat(s_endline,s_endline);
+		line3 = strcat("\s[1]\s ", map1," ",vote1,"\n");
+		line4 = strcat("\s[2]\s ", map2," ",vote2,"\n");
+		line5 = strcat("\s[3]\s ", map3," ",vote3,"\n");
+		line6 = strcat("\s[4]\s ", map4," ",vote4,"\n");
+		line7 = "\n";
+		line8 = "\n";
+		
+		returnstring = strcat(line1, line2, line3,line4,line5,line6,line7,line8);
+		return returnstring;
+	}
 	return "";
 
 };
