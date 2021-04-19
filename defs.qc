@@ -1052,7 +1052,7 @@ typedef struct {
 #define MATCHSTATE_LIVE				3
 #define MATCHSTATE_FINISH			4
 
-#define MAXSCORE				3	//scorelimit
+#define MAXSCORE				100	//scorelimit
 
 #define	NAIL_SPEED				1500
 #define ROCKET_SPEED				1000
